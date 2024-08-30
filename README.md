@@ -9,8 +9,8 @@ Follow these steps to set up the EcoChain API:
    Clone the EcoChain repository to your local machine and navigate to the project directory using the following commands:
 
    ```
-   git clone https://github.com/Henri-99/ecochain/
-   cd ecochain
+   git clone https://github.com/DonnyDee11/ecochainBanks_api/
+   cd ecochainBanks_api
    ```
 
 2. **Create a Virtual Environment:**
