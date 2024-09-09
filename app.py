@@ -48,6 +48,7 @@ fake = Faker()
 
 @app.route("/")
 def home():
+    print(app.config['SQLALCHEMY_DATABASE_URI'])
     return jsonify({
         "status": "success", 
         "message": "Welcome to EcoChain"
@@ -396,114 +397,76 @@ def input_governancemetrics(submission_id):
             "success": False,
             "message": str(e)
         }), 500
-    
+
 @app.route("/trans/<submission_id>", methods=["POST"])
 @jwt_required()
-@cross_origin(methods=['POST', 'OPTIONS'])
 def trans(submission_id):
-    if request.method == 'OPTIONS':
-        response = jsonify({})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers','*')
-        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
-        return response
-    
-    elif request.method == 'POST':
-        print("in server")
-        
-        submission = Submission.query.get(submission_id)
-    
-        # List of models to fetch data from
-        models = [Peoplemetrics, Planetmetrics, Prosperitymetrics, Governancemetrics]
-
-        # Fetch metrics and create a combined dictionary
-        data = {}
-        grouped_metrics = {}
-        for model in models:
-            model_name = model.__name__
-            metric = model.query.filter_by(SubmissionID=submission_id).first()
-            if metric:
-                # Get the column names and values for the metric using introspection
-                columns = {column.name: getattr(metric, column.name) for column in inspect(model).columns}
-                data.update(columns)
-                grouped_metrics[model_name] = columns
-
-        # Remove the SubmissionID key as it's common and not needed in the output
-        data.pop('SubmissionID', None)
-
-        # 1. Send data to BaaS platform 
-        baas_response = send_data_to_baas(data, submission_id) 
-
-        if not baas_response["success"]:
-            return jsonify({
-                "success": False,
-                "message": "Failed to send data to BaaS platform"
-            }), 500
-
-        # 2. Create webhook to receive BaaS notification (Implementation details will depend on your setup)
-        create_transaction_complete_webhook(submission_id)
-
-        # 3. Update submission status to indicate "pending blockchain write"
-        submission.Status = 2  
-        db.session.commit()
-
-        return jsonify({
-            "success": True, 
-            "message": "Data sent to BaaS platform. NFT minting will occur upon blockchain confirmation."
-        }), 200
-
-
-# New route to handle the transaction complete webhook from BaaS
-@app.route('/transaction_complete', methods=['POST'])
-def transaction_complete_webhook():
-    data = request.get_json()
-
-    submission_id = resolve_submission_id_from_baas_data(data) 
-
-    if not submission_id:
-        return jsonify({
-            "success": False,
-            "message": "Failed to resolve submission ID from BaaS data"
-        }), 400
+    print("in server")
 
     submission = Submission.query.get(submission_id)
+    
+    # List of models to fetch data from
+    models = [Peoplemetrics, Planetmetrics, Prosperitymetrics, Governancemetrics]
 
-    if not submission:
+    # Fetch metrics and create a combined dictionary
+    data = {}
+    grouped_metrics = {}
+    for model in models:
+        model_name = model.__name__
+        metric = model.query.filter_by(SubmissionID=submission_id).first()
+        if metric:
+            # Get the column names and values for the metric using introspection
+            columns = {column.name: getattr(metric, column.name) for column in inspect(model).columns}
+            data.update(columns)
+            grouped_metrics[model_name] = columns
+
+    # Remove the SubmissionID key as it's common and not needed in the output
+    data.pop('SubmissionID', None)
+
+    user_id = get_jwt_identity() # Get the user's ID from the JWT token
+
+    submission.Status = 1  # Pending (or another suitable value)
+    db.session.commit()
+    
+    # Send data to BaaS platform 
+    baas_response = send_data_to_baas(data, submission_id, user_id) 
+    if not baas_response["success"]:
         return jsonify({
             "success": False,
-            "message": "Submission not found"
-        }), 404
+            "message": "Failed to send data to BaaS platform"
+            }), 500
+    
+    # Create webhook to receive BaaS notification (Implementation details will depend on your setup)
+    create_transaction_complete_webhook(submission_id)
 
-    # Check if the BaaS transaction was successful
-    if not data.get("BlockchainResults") or not data["BlockchainResults"][0].get("isSuccess"):
-        # Handle BaaS transaction failure (log, notify user, etc.)
-        submission.Status = 3 
-        db.session.commit()
-        return jsonify({
-            "success": False,
-            "message": "BaaS transaction failed. NFT minting aborted."
-        }), 500
+    # return jsonify({
+    # "success": True,
+    # "message": "Data sent to BaaS platform. Waiting for blockchain confirmation."
+    # }), 200
+    
+    # Fetch metrics and create a combined dictionary
+    nftData = {}
+    grouped_metrics = {}
+    for model in models:
+        model_name = model.__name__
+        metric = model.query.filter_by(SubmissionID=submission_id).first()
+        if metric:
+            # Get the column names and values for the metric using introspection
+            columns = {column.name: getattr(metric, column.name) for column in inspect(model).columns}
+            nftData.update(columns)
+            grouped_metrics[model_name] = columns
 
-    # Now that we have SUCCESSFUL blockchain confirmation, proceed with NFT minting
+    # Remove the SubmissionID key as it's common and not needed in the output
+    nftData.pop('SubmissionID', None)
+
     private_key = ecochainPK
     my_address = ecochainAddress
-    user_id = get_jwt_identity()
     current_user = db.session.get(User, user_id)
     rec_address = current_user.AlgorandAddress
     rec_privateKey = current_user.AlgorandPrivateKey
     transamount = 0
 
-    #Extract transaction ID and other details from BaaS response 
-    baas_tx_id = data["BlockchainResults"][0]["transactionId"]
-    baas_tx_url = data["BlockchainResults"][0]["transactionExplorerUrl"]
-    # ... extract other relevant details as needed ...
-
-    # Construct NFT metadata (notes) using BaaS information
-    nft_metadata = {
-        "BaaS Transaction ID": baas_tx_id,
-        "BaaS Transaction URL": baas_tx_url,
-        # ... add other relevant metadata as needed ...
-    }
+    txid, confirmedTxn = first_transaction_example(private_key, my_address, rec_address, transamount,  nftData)
 
     # Check if confirmed_txn has the expected structure or keys
     if not confirmedTxn:
@@ -511,8 +474,6 @@ def transaction_complete_webhook():
             "success": False,
             "message": "Failed to confirm the transaction"
         }), 500
-    
-    txid, confirmedTxn = first_transaction_example(private_key, my_address, rec_address, transamount, nft_metadata)
     
     txidNFT, confirmed_txnNFT, created_asset = createASA(private_key, my_address, txid)
 
@@ -558,7 +519,7 @@ def transaction_complete_webhook():
     
     try:
         db.session.add(new_metric)
-        submission.Status = 1
+        submission.Status = 2
         db.session.commit()
         user_email = current_user.Email 
         user_name = current_user.Name 
@@ -578,8 +539,10 @@ def transaction_complete_webhook():
             "success": False, 
             "message": str(e)
         }), 500
+            
     
-def send_data_to_baas(data, submission_id):
+    
+def send_data_to_baas(data, submission_id, user_id):
 
 
     url = 'https://blockapi.co.za/api/v1/blockchainTask'
@@ -589,10 +552,12 @@ def send_data_to_baas(data, submission_id):
         'Content-Type': 'application/json'
     }
 
+    combined_data_id = f"{user_id}-{submission_id}"
+
     # Construct the payload using the submission_id as the dataId
     payload = {
         "dataSchemaName": "ESGSubmission",  
-        "dataId": str(submission_id),
+        "dataId": combined_data_id,
         "jsonPayload": data
     }
 
@@ -606,17 +571,105 @@ def send_data_to_baas(data, submission_id):
 
 def create_transaction_complete_webhook(submission_id):
     
-    pass  # Placeholder - you need to implement this based on your setup
+    """
+    For development with ngrok, we don't need to explicitly create a webhook. 
+    Just log the submission_id for tracking purposes.
+    """
+
+    print(f"Webhook created for submission ID: {submission_id}") 
+    # You might want to store this association in a database or in-memory data structure if needed
 
 
+
+# New route to handle the transaction complete webhook from BaaS
+@app.route("/transaction_complete", methods=['POST'])
+def transaction_complete_webhook():
+    data = request.get_json()
+    print(f"Webhook data received: {data}")
+
+    combined_data_id = resolve_submission_id_from_baas_data(data) 
+
+    if not combined_data_id:
+        return jsonify({
+            "success": False,
+            "message": "Failed to resolve combined data ID from BaaS data"
+        }), 400
+    
+    try:
+        user_id, submission_id = combined_data_id.split('-')  # Decouple the IDs
+        user_id = int(user_id)
+        submission_id = int(submission_id)
+    except ValueError:
+        return jsonify({
+            "success": False,
+            "message": "Invalid combined data ID format"
+        }), 400
+
+
+    #Retrieve user information using the extracted user_id
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({
+            "success": False,
+            "message": "User not found for this submission"
+        }), 404
+
+    #Fetch the submission record using submission_id 
+    submission = Submission.query.get(submission_id)
+
+    if not submission:
+        return jsonify({
+            "success": False,
+            "message": "Submission not found"
+        }), 404
+    
+    # Check if the BaaS transaction was successful
+    if not data.get("BlockchainResults") or not data["BlockchainResults"][0].get("isSuccess"):
+        # Handle BaaS transaction failure 
+        submission.Status = 4  # Rejected at BaaS
+        db.session.commit()
+
+        return jsonify({
+            "success": False,
+            "message": "BaaS transaction failed."
+        }), 500
+
+    # BaaS transaction was successful
+
+    # Extract transaction ID and other details from BaaS response 
+    baas_tx_id = data["BlockchainResults"][0]["transactionId"]
+    baas_tx_url = data["BlockchainResults"][0]["transactionExplorerUrl"]
+
+    print(f"BaaS Transaction ID: {baas_tx_id}, BaaS Transaction URL: {baas_tx_url}")
+
+    try:
+        # ... (update submission status, mint NFT, send email, etc.)
+
+        return jsonify({
+            "success": True,
+            "message": "Transaction and NFT minting completed successfully",
+            "baas_tx_id": baas_tx_id,
+            "baas_tx_url": baas_tx_url
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        # Log the error for debugging
+        print(f"Error processing webhook: {e}")
+        return jsonify({
+            "success": False,
+            "message": "An error occurred while processing the webhook"
+        }), 500
+
+    
+    
+
+
+
+ 
 def resolve_submission_id_from_baas_data(data):
-    """
-    Extracts the `submission_id` from the JSON data received in the 
-    'transaction complete' webhook from the BaaS platform.
-    """
-
     return data.get("dataId")
-   
+
 
 # Use this protected decorator for all sensitive information
 @app.route('/protected')
@@ -633,7 +686,7 @@ def protected_route():
 
 def sendEmail(recipient_email, recipient_name, subject, algoaddress, transaction_id, nft_id, metrics, startPeriod, endPeriod, reportSubDate):
     transaction_link = f"https://testnet.explorer.perawallet.app/tx/{transaction_id}"
-    nft_link = f"https://testnet.explorer.perawallet.app/tx/{nft_id}"
+    nft_link = f"https://testnet.explorer.perawallet.app/asset/{nft_id}"
 
     # Start constructing the email body
     body = f"Dear {recipient_name},\n\n"
@@ -671,6 +724,39 @@ def sendEmail(recipient_email, recipient_name, subject, algoaddress, transaction
     mail.send(msg)
 
     # You might want to handle the 'flash' messaging differently, based on where you call this function from.
+
+def sendEmailBaaS(recipient_email, recipient_name, subject, algoaddress, nft_id, startPeriod, endPeriod, reportSubDate, baas_tx_id, baas_tx_url):
+    nft_link = f"https://testnet.explorer.perawallet.app/asset/{nft_id}"
+
+    # Start constructing the email body
+    body = f"Dear {recipient_name},\n\n"
+
+    body += "Thank you for submitting your report. Below are the details of your submission:\n\n"
+    body += f"Date of report submission: {reportSubDate}:\n"
+    body += f"Reporting period start date: {startPeriod}:\n"
+    body += f"Reporting period end date: {endPeriod}:\n\n"
+
+    body += "\nAs part of our commitment to transparency, we have securely stored your ESG metrics data on our Blockchain-as-a-Service (BaaS) platform and minted an NFT as a certificate of your submission. You can access the details through the links provided below.\n\n"
+
+    body += f"Your Unique Algorand Address:\n{algoaddress}\n"
+    body += "(This address is unique to you, ensuring your contributions are securely recorded and accessible.)\n\n"
+
+    body += f"BaaS Transaction ID: {baas_tx_id}\n\n"  # Include BaaS transaction ID
+    body += f"View the BaaS transaction that records your ESG metrics data on the blockchain:\n{baas_tx_url}\n\n"
+
+    body += f"Access your Non-Fungible Token (NFT), serving as a certificate of your ESG commitment:\n{nft_link}\n\n"
+
+    # Conclusion and sign-off 
+    body += "Your proactive steps towards sustainability are valuable. We appreciate your contribution to a greener, fairer, and more sustainable future.\n\n"
+
+    body += "With sincere appreciation,\n\n"
+    body += "The EcoChain Team\n"
+
+    # Prepare and send the email
+    msg = Message(subject, sender=('Ecochain', 'ecochain0@gmail.com'), recipients=[recipient_email])
+    msg.body = body
+    mail.send(msg)
+
 
    
 @app.route('/get_reports')
