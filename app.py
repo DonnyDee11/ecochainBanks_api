@@ -48,7 +48,6 @@ fake = Faker()
 
 @app.route("/")
 def home():
-    print(app.config['SQLALCHEMY_DATABASE_URI'])
     return jsonify({
         "status": "success", 
         "message": "Welcome to EcoChain"
@@ -661,12 +660,7 @@ def transaction_complete_webhook():
             "message": "An error occurred while processing the webhook"
         }), 500
 
-    
-    
 
-
-
- 
 def resolve_submission_id_from_baas_data(data):
     return data.get("dataId")
 
@@ -918,4 +912,6 @@ if __name__ == "__main__":
             db.create_all()
             generate_dummy_data()
     else:
-        app.run(debug=True)
+        port = int(os.environ.get('PORT', 5000))  # Get port from environment or default to 5000
+        app.run(debug=True, host='0.0.0.0', port=port)  # Bind to 0.0.0.0
+        
