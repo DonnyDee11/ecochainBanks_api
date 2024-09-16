@@ -23,6 +23,7 @@ import os
 import random
 from datetime import datetime
 import requests
+from modelsBanks import db, User, Transaction, Submission, SocialMetrics, EnvironmentalMetrics, GovernanceMetrics
 
 ecochainPK = "4pGX12svaEoBYqBX7WfriGIhUB3VjkeUofm6IM3Y+6b69JOah+47V6+PX/KeLfpDMv683zGwQ2R83pkdj7FwCA=="
 ecochainAddress = "7L2JHGUH5Y5VPL4PL7ZJ4LP2IMZP5PG7GGYEGZD432MR3D5ROAEDKWFGRU"
@@ -225,177 +226,589 @@ def nullify_empty_string(string):
     else:
         return string
 
-@app.route("/input_peoplemetrics/<submission_id>", methods=["POST"])
+@app.route("/input_social_metrics/<submission_id>", methods=["POST"])
 @jwt_required()
-def input_peoplemetrics(submission_id):
+def input_social_metrics(submission_id):
+    data = request.get_json()
+
+    # Extract and process social metrics data from the request
+    social_metrics_data = {
+    'CustomerComplaints': data.get('CustomerComplaints'),
+    'CustomerSatisfactionScore': data.get('CustomerSatisfactionScore'),
+
+    'PermanentEmployeesMale': data.get('PermanentEmployeesMale'),
+    'PermanentEmployeesFemale': data.get('PermanentEmployeesFemale'),
+    'TemporaryEmployees': data.get('TemporaryEmployees'),
+    'FullTimeEmployeesMale': data.get('FullTimeEmployeesMale'),
+    'FullTimeEmployeesFemale': data.get('FullTimeEmployeesFemale'),
+    'PartTimeEmployeesMale': data.get('PartTimeEmployeesMale'),
+    'PartTimeEmployeesFemale': data.get('PartTimeEmployeesFemale'),
+    'EmployeeTurnoverRate': data.get('EmployeeTurnoverRate'),
+    'TrainingAndDevelopmentSpendPerEmployee': data.get('TrainingAndDevelopmentSpendPerEmployee'),
+    'LostTimeInjuryFrequencyRate': data.get('LostTimeInjuryFrequencyRate'),
+    'EmployeeEngagementScore': data.get('EmployeeEngagementScore'),
+    'GenderPayGap': data.get('GenderPayGap'),
+
+    'TotalTrainingSpend': data.get('TotalTrainingSpend'),
+    'TotalTrainingSpendBasicPayroll': data.get('TotalTrainingSpendBasicPayroll'),
+    'TrainingSpendPerEmployee': data.get('TrainingSpendPerEmployee'),
+    'TrainingBeneficiaries': data.get('TrainingBeneficiaries'),
+    'AverageTrainingHours': data.get('AverageTrainingHours'),
+    'TrainingSpendBlackEmployees': data.get('TrainingSpendBlackEmployees'),
+    'TrainingSpendBlackFemaleEmployees': data.get('TrainingSpendBlackFemaleEmployees'),
+    'TrainingSpendBlackFemaleEmployeesWithDisabilities': data.get('TrainingSpendBlackFemaleEmployeesWithDisabilities'),
+    'TrainingSpendFemaleEmployees': data.get('TrainingSpendFemaleEmployees'),
+    'TrainingSpendFemaleEmployeesWithDisabilities': data.get('TrainingSpendFemaleEmployeesWithDisabilities'),
+    'TotalInternalBursaries': data.get('TotalInternalBursaries'),
+    'ActualPaymentOnBursaries': data.get('ActualPaymentOnBursaries'),
+    'LearnershipOfferedToUnemployedAndDisabled': data.get('LearnershipOfferedToUnemployedAndDisabled'),
+    'LearnershipsAndInternships': data.get('LearnershipsAndInternships'),
+    'LearnershipStudentsAdsorbedIntoEmployment': data.get('LearnershipStudentsAdsorbedIntoEmployment'),
+    'NumberEmployeesAttendedManagementLeadership': data.get('NumberEmployeesAttendedManagementLeadership'),
+
+    'TotalGraduateProgramIntake': data.get('TotalGraduateProgramIntake'),
+    'GraduateProgramIntakeFemale': data.get('GraduateProgramIntakeFemale'),
+    'TotalGraduateProgramAbsorption': data.get('TotalGraduateProgramAbsorption'),
+    'GraduateProgramAbsorptionRate': data.get('GraduateProgramAbsorptionRate'),
+
+    'SouthAfricanEmployeesMale': data.get('SouthAfricanEmployeesMale'),
+    'SouthAfricanEmployeesFemale': data.get('SouthAfricanEmployeesFemale'),
+    'InternationalEmployeesMale': data.get('InternationalEmployeesMale'),
+    'InternationalEmployeesFemale': data.get('InternationalEmployeesFemale'),
+
+    'BlackFemaleEmployees': data.get('BlackFemaleEmployees'),
+    'ColouredEmployees': data.get('ColouredEmployees'),
+    'IndianEmployees': data.get('IndianEmployees'),
+    'AsianEmployees': data.get('AsianEmployees'),
+    'WhiteEmployees': data.get('WhiteEmployees'),
+    'MaleEmployees': data.get('MaleEmployees'),
+    'FemaleEmployees': data.get('FemaleEmployees'),
+    'DisabilityRepresentationNumberOfEmployees': data.get('DisabilityRepresentationNumberOfEmployees'),
+
+    'LessThan20YearsMale': data.get('LessThan20YearsMale'),
+    'LessThan20YearsFemale': data.get('LessThan20YearsFemale'),
+    'Between20And29YearsMale': data.get('Between20And29YearsMale'),
+    'Between20And29YearsFemale': data.get('Between20And29YearsFemale'),
+    'Between30And39YearsMale': data.get('Between30And39YearsMale'),
+    'Between30And39YearsFemale': data.get('Between30And39YearsFemale'),
+    'Between40And49YearsMale': data.get('Between40And49YearsMale'),
+    'Between40And49YearsFemale': data.get('Between40And49YearsFemale'),
+    'Between50And59YearsMale': data.get('Between50And59YearsMale'),
+    'Between50And59YearsFemale': data.get('Between50And59YearsFemale'),
+    'Between60And69YearsMale': data.get('Between60And69YearsMale'),
+    'Between60And69YearsFemale': data.get('Between60And69YearsFemale'),
+    'Over69YearsMale': data.get('Over69YearsMale'),
+    'Over69YearsFemale': data.get('Over69YearsFemale'),
+
+    'TenureLessThan1Year': data.get('TenureLessThan1Year'),
+    'Tenure1To3Years': data.get('Tenure1To3Years'),
+    'Tenure4To6Years': data.get('Tenure4To6Years'),
+    'Tenure7To9Years': data.get('Tenure7To9Years'),
+    'Tenure10To20Years': data.get('Tenure10To20Years'),
+    'Tenure21To30Years': data.get('Tenure21To30Years'),
+    'Tenure31To40Years': data.get('Tenure31To40Years'),
+    'TenureMoreThan40Years': data.get('TenureMoreThan40Years'),
+
+    # Top Management
+    'TopManagementTotalNumber': data.get('TopManagementTotalNumber'),
+    'TopManagementMaleEmployees': data.get('TopManagementMaleEmployees'),
+    'TopManagementFemaleEmployees': data.get('TopManagementFemaleEmployees'),
+    'TopManagementBlackMaleEmployees': data.get('TopManagementBlackMaleEmployees'),
+    'TopManagementBlackFemaleEmployees': data.get('TopManagementBlackFemaleEmployees'),
+    'TopManagementAfricanEmployees': data.get('TopManagementAfricanEmployees'),
+    'TopManagementColouredEmployees': data.get('TopManagementColouredEmployees'),
+    'TopManagementIndianEmployees': data.get('TopManagementIndianEmployees'),
+    'TopManagementAsianEmployees': data.get('TopManagementAsianEmployees'),
+    'TopManagementWhiteEmployees': data.get('TopManagementWhiteEmployees'),
+    'TopManagementDisabledEmployees': data.get('TopManagementDisabledEmployees'),
+
+    # Senior Management
+    'SeniorManagementTotalNumber': data.get('SeniorManagementTotalNumber'),
+    'SeniorManagementMaleEmployees': data.get('SeniorManagementMaleEmployees'),
+    'SeniorManagementFemaleEmployees': data.get('SeniorManagementFemaleEmployees'),
+    'SeniorManagementBlackMaleEmployees': data.get('SeniorManagementBlackMaleEmployees'),
+    'SeniorManagementBlackFemaleEmployees': data.get('SeniorManagementBlackFemaleEmployees'),
+    'SeniorManagementACIEmployees': data.get('SeniorManagementACIEmployees'),
+    'SeniorManagementColouredEmployees': data.get('SeniorManagementColouredEmployees'),
+    'SeniorManagementIndianEmployees': data.get('SeniorManagementIndianEmployees'),
+    'SeniorManagementAsianEmployees': data.get('SeniorManagementAsianEmployees'),
+    'SeniorManagementWhiteEmployees': data.get('SeniorManagementWhiteEmployees'),
+    'SeniorManagementDisabledEmployees': data.get('SeniorManagementDisabledEmployees'),
+
+    # Middle Management
+    'MiddleManagementTotalNumber': data.get('MiddleManagementTotalNumber'),
+    'MiddleManagementMaleEmployees': data.get('MiddleManagementMaleEmployees'),
+    'MiddleManagementFemaleEmployees': data.get('MiddleManagementFemaleEmployees'),
+    'MiddleManagementBlackEmployees': data.get('MiddleManagementBlackEmployees'),
+    'MiddleManagementACIEmployees': data.get('MiddleManagementACIEmployees'),
+    'MiddleManagementColouredEmployees': data.get('MiddleManagementColouredEmployees'),
+    'MiddleManagementIndianEmployees': data.get('MiddleManagementIndianEmployees'),
+    'MiddleManagementAsianEmployees': data.get('MiddleManagementAsianEmployees'),
+    'MiddleManagementWhiteEmployees': data.get('MiddleManagementWhiteEmployees'),
+    'MiddleManagementDisabledEmployees': data.get('MiddleManagementDisabledEmployees'),
+
+    # Junior Management
+    'JuniorManagementTotalNumber': data.get('JuniorManagementTotalNumber'), 
+    'JuniorManagementMaleEmployees': data.get('JuniorManagementMaleEmployees'), 
+    'JuniorManagementFemaleEmployees': data.get('JuniorManagementFemaleEmployees'), 
+    'JuniorManagementBlackMaleEmployees': data.get('JuniorManagementBlackMaleEmployees'), 
+    'JuniorManagementBlackFemaleEmployees': data.get('JuniorManagementBlackFemaleEmployees'), 
+    'JuniorManagementColouredEmployees': data.get('JuniorManagementColouredEmployees'),
+    'JuniorManagementIndianEmployees': data.get('JuniorManagementIndianEmployees'),
+    'JuniorManagementAsianEmployees': data.get('JuniorManagementAsianEmployees'),
+    'JuniorManagementWhiteEmployees': data.get('JuniorManagementWhiteEmployees'),
+    'JuniorManagementDisabledEmployees': data.get('JuniorManagementDisabledEmployees'),
+
+    # Semi-Skilled
+    'SemiSkilledTotalNumber': data.get('SemiSkilledTotalNumber'), 
+    'SemiSkilledFemaleEmployees': data.get('SemiSkilledFemaleEmployees'), 
+    'SemiSkilledBlackMaleEmployees': data.get('SemiSkilledBlackMaleEmployees'), 
+    'SemiSkilledBlackFemaleEmployees': data.get('SemiSkilledBlackFemaleEmployees'), 
+    'SemiSkilledACIEmployees': data.get('SemiSkilledACIEmployees'), 
+    'SemiSkilledColouredEmployees': data.get('SemiSkilledColouredEmployees'), 
+    'SemiSkilledIndianEmployees': data.get('SemiSkilledIndianEmployees'), 
+    'SemiSkilledAsianEmployees': data.get('SemiSkilledAsianEmployees'),
+    'SemiSkilledWhiteEmployees': data.get('SemiSkilledWhiteEmployees'),
+    'SemiSkilledDisabledEmployees': data.get('SemiSkilledDisabledEmployees'),
+
+    # Unskilled
+    'UnskilledTotalNumber': data.get('UnskilledTotalNumber'),
+    'UnskilledFemaleEmployees': data.get('UnskilledFemaleEmployees'),
+    'UnskilledBlackMaleEmployees': data.get('UnskilledBlackMaleEmployees'),
+    'UnskilledBlackFemaleEmployees': data.get('UnskilledBlackFemaleEmployees'),
+    'UnskilledACIEmployees': data.get('UnskilledACIEmployees'),
+    'UnskilledColouredEmployees': data.get('UnskilledColouredEmployees'),
+    'UnskilledIndianEmployees': data.get('UnskilledIndianEmployees'),
+    'UnskilledAsianEmployees': data.get('UnskilledAsianEmployees'),
+    'UnskilledWhiteEmployees': data.get('UnskilledWhiteEmployees'),
+    'UnskilledDisabledEmployees': data.get('UnskilledDisabledEmployees'),
+
+    # Per Disability Type
+    'SensoryDisability': data.get('SensoryDisability'),
+    'PhysicalDisability': data.get('PhysicalDisability'),
+    'MentalDisability': data.get('MentalDisability'),
+    'MultipleDisabilities': data.get('MultipleDisabilities'),
+
+    # Financial Inclusion
+    'MortgageLoansGranted': data.get('MortgageLoansGranted'),
+    'MortgageLoansValueTotal': data.get('MortgageLoansValueTotal'),
+    'MortgageLoansAffordableHousingTotal': data.get('MortgageLoansAffordableHousingTotal'),
+    'MortgageLoansAffordableHousingValueTotal': data.get('MortgageLoansAffordableHousingValueTotal'),
+
+    # Physical Footprint
+    'Outlets': data.get('Outlets'),
+    'ATMs': data.get('ATMs'),
+    'POSDevices': data.get('POSDevices'),
+    'TotalClients': data.get('TotalClients'),
+    'DigitallyActiveClients': data.get('DigitallyActiveClients'),
+
+    # Digital Footprint
+    # 'DigitallyActiveClients': data.get('DigitallyActiveClients'),  # Already included above
+
+    # Suppliers
+    'TotalNumberSuppliers': data.get('TotalNumberSuppliers'),
+    'TotalProcurementSpend': data.get('TotalProcurementSpend'),
+    'TotalProcurementSpendExemptMicroenterprises': data.get('TotalProcurementSpendExemptMicroenterprises'),
+    'TotalProcurementSpendQualifyingSmallEnterprises': data.get('TotalProcurementSpendQualifyingSmallEnterprises'),
+    'TotalProcurementSpend51PercentBlackOwned': data.get('TotalProcurementSpend51PercentBlackOwned'),
+    'TotalProcurementSpend30PercentBlackOwned': data.get('TotalProcurementSpend30PercentBlackOwned'),
+    'LocalProcurementSpend': data.get('LocalProcurementSpend'),
+
+    # Regulators
+    'TotalEnvironmentalIncidents': data.get('TotalEnvironmentalIncidents'),
+    'TotalEnvironmentalFines': data.get('TotalEnvironmentalFines')
+    }
+
+    # Apply nullify_empty_string to all values
+    social_metrics_data = {k: nullify_empty_string(v) for k, v in social_metrics_data.items()}
+
+    existing_metric = SocialMetrics.query.filter_by(SubmissionID=submission_id).first()
+
+    if existing_metric:
+        # Update existing metrics
+        for key, value in social_metrics_data.items():
+            setattr(existing_metric, key, value)
+    else:
+        # Create new metrics record
+        new_metric = SocialMetrics(**social_metrics_data, SubmissionID=submission_id)
+        db.session.add(new_metric)
+
+    try:
+        db.session.commit()
+        return jsonify({
+            "success": True,
+            "message": "Social metrics added/updated successfully"
+        }), 201  # Created or Updated
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
+@app.route("/input_environmental_metrics/<submission_id>", methods=["POST"])
+@jwt_required()
+def input_environmental_metrics(submission_id):
+    data = request.get_json()
+
+    # Extract and process environmental metrics data
+    environmental_metrics_data = {
+    'TotalEnergyUse': data.get('TotalEnergyUse'),
+    'TotalRenewableEnergy': data.get('TotalRenewableEnergy'),
+    'TotalNonRenewableEnergy': data.get('TotalNonRenewableEnergy'),
+    'NonRenewableEnergySources': data.get('NonRenewableEnergySources'),
+
+    'CarbonEmissions': data.get('CarbonEmissions'),
+    'CarEmissions': data.get('CarEmissions'),
+    'RefrigerantGasEmissions': data.get('RefrigerantGasEmissions'),
+    'DieselGeneratorsEmissions': data.get('DieselGeneratorsEmissions'),
+    'ElectricityEmissions': data.get('ElectricityEmissions'),
+    'ATMEmissions': data.get('ATMEmissions'),
+    'TotalIndirectEmissions': data.get('TotalIndirectEmissions'),
+    'FlightEmissions': data.get('FlightEmissions'),
+    'CashInTransitEmissions': data.get('CashInTransitEmissions'),
+    'CarRentalsEmissions': data.get('CarRentalsEmissions'),
+    'CloudComputingEmissions': data.get('CloudComputingEmissions'),
+    'CourierEmissions': data.get('CourierEmissions'),
+    'PaperUsageEmissions': data.get('PaperUsageEmissions'),
+    'WasteDisposalEmissions': data.get('WasteDisposalEmissions'),
+    'EmployeeCommutingEmissions': data.get('EmployeeCommutingEmissions'),
+    'ElectricityTransmissionLossesEmissions': data.get('ElectricityTransmissionLossesEmissions'),
+    'CarbonEmissionsPerMeterSquared': data.get('CarbonEmissionsPerMeterSquared'),
+
+    'TotalWaste': data.get('TotalWaste'),
+    'RecycledWaste': data.get('RecycledWaste'),
+    'WasteToLandfill': data.get('WasteToLandfill')
+}
+
+    # Apply nullify_empty_string to all values
+    environmental_metrics_data = {k: nullify_empty_string(v) for k, v in environmental_metrics_data.items()}
+
+    existing_metric = EnvironmentalMetrics.query.filter_by(SubmissionID=submission_id).first()
+
+    if existing_metric:
+        for key, value in environmental_metrics_data.items():
+            setattr(existing_metric, key, value)
+    else:
+        new_metric = EnvironmentalMetrics(**environmental_metrics_data, SubmissionID=submission_id)
+        db.session.add(new_metric)
+
+    try:
+        db.session.commit()
+        return jsonify({
+            "success": True,
+            "message": "Environmental metrics added/updated successfully"
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
+@app.route("/input_governance_metrics/<submission_id>", methods=["POST"])
+@jwt_required()
+def input_governance_metrics(submission_id):
+    data = request.get_json()
+
+    governance_metrics_data = {
+    'NumberOfBoardMembers': data.get('NumberOfBoardMembers'),
+    'IndependentNonExecutiveDirectors': data.get('IndependentNonExecutiveDirectors'),
+    'ExecutiveDirectors': data.get('ExecutiveDirectors'),
+    'NonExecutiveDirectors': data.get('NonExecutiveDirectors'),
+    'IndependentBoardChairman': data.get('IndependentBoardChairman'),
+    'BlackACIExecutiveBoardMembers': data.get('BlackACIExecutiveBoardMembers'),
+    'BlackACIWomenExecutiveBoardMembers': data.get('BlackACIWomenExecutiveBoardMembers'),
+    'BlackACIIndependentNonExecutiveBoardMembers': data.get('BlackACIIndependentNonExecutiveBoardMembers'),
+
+    'TotalNumberOfBoardMeetings': data.get('TotalNumberOfBoardMeetings'),
+    'BoardTrainingHours': data.get('BoardTrainingHours'),
+
+    'WhiteMales': data.get('WhiteMales'),
+    'WhiteFemales': data.get('WhiteFemales'),
+    'ACIFemales': data.get('ACIFemales'),
+    'ACIMales': data.get('ACIMales'),
+    'NonSABoardMembers': data.get('NonSABoardMembers'),
+
+    'BoardMembersLessThan1Year': data.get('BoardMembersLessThan1Year'),
+    'BoardMembers1To3Years': data.get('BoardMembers1To3Years'),
+    'BoardMembers4To6Years': data.get('BoardMembers4To6Years'),
+    'BoardMembers7To9Years': data.get('BoardMembers7To9Years'),
+    'BoardMembersMoreThan9Years': data.get('BoardMembersMoreThan9Years'),
+    'BoardMembers40To49YearsAge': data.get('BoardMembers40To49YearsAge'),
+    'BoardMembers50To59YearsAge': data.get('BoardMembers50To59YearsAge'),
+    'BoardMembers60To69YearsAge': data.get('BoardMembers60To69YearsAge'),
+    'BoardMembers70Plus': data.get('BoardMembers70Plus'),
+
+    'TotalNumberOfExcoMembers': data.get('TotalNumberOfExcoMembers'),
+    'ExecutiveDirectorsExco': data.get('ExecutiveDirectorsExco'),
+    'PrescribedOfficers': data.get('PrescribedOfficers'),
+    'ExOfficioMembers': data.get('ExOfficioMembers'),
+    'WomenExcoMembers': data.get('WomenExcoMembers'),
+    'ACIExcoMembers': data.get('ACIExcoMembers'),
+
+    'ExcoMembers0To3Years': data.get('ExcoMembers0To3Years'),
+    'ExcoMembers4To6Years': data.get('ExcoMembers4To6Years'),
+    'ExcoMembers7To9Years': data.get('ExcoMembers7To9Years'),
+
+    'ExcoMembers0To10Years': data.get('ExcoMembers0To10Years'),
+    'ExcoMembers11To20Years': data.get('ExcoMembers11To20Years'),
+    'ExcoMembersMoreThan20Years': data.get('ExcoMembersMoreThan20Years'),
+
+    'ControllingShareholder': data.get('ControllingShareholder'),
+    'MultipleShareholderRights': data.get('MultipleShareholderRights'),
+
+    'BeneficialSharesDirectOwnershipCEO': data.get('BeneficialSharesDirectOwnershipCEO'),
+    'BeneficialSharesIndirectOwnershipCEO': data.get('BeneficialSharesIndirectOwnershipCEO'),
+    'TotalSharesOwnedCEO': data.get('TotalSharesOwnedCEO'),
+
+    'BeneficialSharesDirectOwnershipCFO': data.get('BeneficialSharesDirectOwnershipCFO'),
+    'BeneficialSharesIndirectOwnershipCFO': data.get('BeneficialSharesIndirectOwnershipCFO'),
+    'TotalSharesOwnedCFO': data.get('TotalSharesOwnedCFO'),
+
+    'BeneficialSharesDirectOwnershipCOO': data.get('BeneficialSharesDirectOwnershipCOO'),
+    'BeneficialSharesIndirectOwnershipCOO': data.get('BeneficialSharesIndirectOwnershipCOO'),
+    'TotalSharesOwnedCOO': data.get('TotalSharesOwnedCOO'),
+
+    'Auditors': data.get('Auditors'),
+    'AuditorTenure': data.get('AuditorTenure'),
+    'AuditFees': data.get('AuditFees'),
+
+    'ExecutiveRemunerationLinkedToESG': data.get('ExecutiveRemunerationLinkedToESG'),
+
+    'CEOGuaranteedPackage': data.get('CEOGuaranteedPackage'),
+    'CEOShortTermIncentive': data.get('CEOShortTermIncentive'),
+    'CEOLongTermIncentive': data.get('CEOLongTermIncentive'),
+    'CEOTotalRemuneration': data.get('CEOTotalRemuneration'),
+    'CEOSharePriceAsMultipleOfGuaranteedPackage': data.get('CEOSharePriceAsMultipleOfGuaranteedPackage'),
+
+    'CFOGuaranteedPackage': data.get('CFOGuaranteedPackage'),
+    'CFOShortTermIncentive': data.get('CFOShortTermIncentive'),
+    'CFOLongTermIncentive': data.get('CFOLongTermIncentive'),
+    'CFOTotalRemuneration': data.get('CFOTotalRemuneration'),
+
+    'COOGuaranteedPackage': data.get('COOGuaranteedPackage'),
+    'COOShortTermIncentive': data.get('COOShortTermIncentive'),
+    'COOLongTermIncentive': data.get('COOLongTermIncentive'),
+    'COOTotalRemuneration': data.get('COOTotalRemuneration'),
+
+    'EmployeesCompletedEthicsTraining': data.get('EmployeesCompletedEthicsTraining'),
+    'ContractorsCompletedEthicsTraining': data.get('ContractorsCompletedEthicsTraining'),
+    'SubsidiariesCompletedEthicsTraining': data.get('SubsidiariesCompletedEthicsTraining'),
+    'ReportedCases': data.get('ReportedCases'),
+    'CasesStillUnderInvestigation': data.get('CasesStillUnderInvestigation'),
+    'SubstantiatedCases': data.get('SubstantiatedCases'),
+    'UnsubstantiatedCases': data.get('UnsubstantiatedCases'),
+    'DisciplinaryCasesReported': data.get('DisciplinaryCasesReported'),
+    'DisciplinaryCasesConcluded': data.get('DisciplinaryCasesConcluded'),
+    'EthicalDisciplinaryCasesConcluded': data.get('EthicalDisciplinaryCasesConcluded'),
+    'OngoingDisciplinaryCases': data.get('OngoingDisciplinaryCases'),
+
+    'SystemAvailability': data.get('SystemAvailability'),
+    'PrivacyRelatedIncidents': data.get('PrivacyRelatedIncidents'),
+    'PrivacyRelatedIncidentsReportedToRegulator': data.get('PrivacyRelatedIncidentsReportedToRegulator')
+}
+
+    # Apply nullify_empty_string to all values
+    governance_metrics_data = {k: nullify_empty_string(v) for k, v in governance_metrics_data.items()}
+
+    existing_metric = GovernanceMetrics.query.filter_by(SubmissionID=submission_id).first()
+
+    if existing_metric:
+        for key, value in governance_metrics_data.items():
+            setattr(existing_metric, key, value)
+    else:
+        new_metric = GovernanceMetrics(**governance_metrics_data, SubmissionID=submission_id)
+        db.session.add(new_metric)
+
+    try:
+        db.session.commit()
+        return jsonify({
+            "success": True,
+            "message": "Governance metrics added/updated successfully"
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
+
+# @app.route("/input_peoplemetrics/<submission_id>", methods=["POST"])
+# @jwt_required()
+# def input_peoplemetrics(submission_id):
    
-    # verify that subimissionid is valid 
-    print(submission_id)
-    data = request.get_json()
-    diversity_inclusion = nullify_empty_string(data.get("DiversityAndInclusion"))
-    pay_equality = nullify_empty_string(data.get("PayEquality"))
-    wage_level = nullify_empty_string(data.get("WageLevel"))
-    health_safety_level = nullify_empty_string(data.get("HealthAndSafetyLevel"))
+#     # verify that subimissionid is valid 
+#     print(submission_id)
+#     data = request.get_json()
+#     diversity_inclusion = nullify_empty_string(data.get("DiversityAndInclusion"))
+#     pay_equality = nullify_empty_string(data.get("PayEquality"))
+#     wage_level = nullify_empty_string(data.get("WageLevel"))
+#     health_safety_level = nullify_empty_string(data.get("HealthAndSafetyLevel"))
     
-    existing_metric = Peoplemetrics.query.filter_by(SubmissionID=submission_id).first()
+#     existing_metric = Peoplemetrics.query.filter_by(SubmissionID=submission_id).first()
     
-    if existing_metric:
-        existing_metric.DiversityAndInclusion = diversity_inclusion
-        existing_metric.PayEquality = pay_equality
-        existing_metric.WageLevel = wage_level
-        existing_metric.HealthAndSafetyLevel = health_safety_level
-    else:
-        new_metric = Peoplemetrics(
-            DiversityAndInclusion=diversity_inclusion,
-            PayEquality=pay_equality,
-            WageLevel=wage_level,
-            HealthAndSafetyLevel=health_safety_level,
-            SubmissionID=submission_id
-        )
-        db.session.add(new_metric)
+#     if existing_metric:
+#         existing_metric.DiversityAndInclusion = diversity_inclusion
+#         existing_metric.PayEquality = pay_equality
+#         existing_metric.WageLevel = wage_level
+#         existing_metric.HealthAndSafetyLevel = health_safety_level
+#     else:
+#         new_metric = Peoplemetrics(
+#             DiversityAndInclusion=diversity_inclusion,
+#             PayEquality=pay_equality,
+#             WageLevel=wage_level,
+#             HealthAndSafetyLevel=health_safety_level,
+#             SubmissionID=submission_id
+#         )
+#         db.session.add(new_metric)
     
-    try:
-        db.session.commit()
-        return jsonify({
-            "success": True, 
-            "message": "Metrics added successfully"
-        }), 201
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({
-            "success": False,
-            "message": str(e)
-        }), 500
+#     try:
+#         db.session.commit()
+#         return jsonify({
+#             "success": True, 
+#             "message": "Metrics added successfully"
+#         }), 201
+#     except Exception as e:
+#         db.session.rollback()
+#         return jsonify({
+#             "success": False,
+#             "message": str(e)
+#         }), 500
     
-@app.route("/input_planetmetrics/<submission_id>", methods=["POST"])
-@jwt_required()
-def input_planetmetrics(submission_id):
-    data = request.get_json()
-    print(data)
+# @app.route("/input_planetmetrics/<submission_id>", methods=["POST"])
+# @jwt_required()
+# def input_planetmetrics(submission_id):
+#     data = request.get_json()
+#     print(data)
 
-    greenhouse_gas_emission = nullify_empty_string(data.get("GreenhouseGasEmission"))
-    water_consumption = nullify_empty_string(data.get("WaterConsumption"))
-    land_use = nullify_empty_string(data.get("LandUse"))
+#     greenhouse_gas_emission = nullify_empty_string(data.get("GreenhouseGasEmission"))
+#     water_consumption = nullify_empty_string(data.get("WaterConsumption"))
+#     land_use = nullify_empty_string(data.get("LandUse"))
 
-    existing_metric = Planetmetrics.query.filter_by(SubmissionID=submission_id).first()
+#     existing_metric = Planetmetrics.query.filter_by(SubmissionID=submission_id).first()
 
-    if existing_metric:
-        existing_metric.GreenhouseGasEmission = greenhouse_gas_emission
-        existing_metric.WaterConsumption = water_consumption
-        existing_metric.LandUse = land_use
-    else:
-        new_metric = Planetmetrics(
-            GreenhouseGasEmission=greenhouse_gas_emission,
-            WaterConsumption=water_consumption,
-            LandUse=land_use,
-            SubmissionID=submission_id
-        )
-        db.session.add(new_metric)
+#     if existing_metric:
+#         existing_metric.GreenhouseGasEmission = greenhouse_gas_emission
+#         existing_metric.WaterConsumption = water_consumption
+#         existing_metric.LandUse = land_use
+#     else:
+#         new_metric = Planetmetrics(
+#             GreenhouseGasEmission=greenhouse_gas_emission,
+#             WaterConsumption=water_consumption,
+#             LandUse=land_use,
+#             SubmissionID=submission_id
+#         )
+#         db.session.add(new_metric)
 
-    try:
-        db.session.commit()
-        return jsonify({
-            "success": True, 
-            "message": "Planet metrics added successfully"
-        }), 201
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({
-            "success": False,
-            "message": str(e)
-        }), 500
+#     try:
+#         db.session.commit()
+#         return jsonify({
+#             "success": True, 
+#             "message": "Planet metrics added successfully"
+#         }), 201
+#     except Exception as e:
+#         db.session.rollback()
+#         return jsonify({
+#             "success": False,
+#             "message": str(e)
+#         }), 500
     
-@app.route("/input_prosperitymetrics/<submission_id>", methods=["POST"])
-@jwt_required()
-def input_prosperitymetrics(submission_id):
+# @app.route("/input_prosperitymetrics/<submission_id>", methods=["POST"])
+# @jwt_required()
+# def input_prosperitymetrics(submission_id):
   
-    data = request.get_json()
-    print(data)
-    total_tax_paid = nullify_empty_string(data.get("TotalTaxPaid"))
-    abs_number_of_new_emps = nullify_empty_string(data.get("AbsNumberOfNewEmps"))
-    abs_number_of_new_emp_turnover = nullify_empty_string(data.get("AbsNumberOfNewEmpTurnover"))
-    economic_contribution = nullify_empty_string(data.get("EconomicContribution"))
-    total_rnd_expenses = nullify_empty_string(data.get("TotalRNDExpenses"))
-    total_capital_expenditures = nullify_empty_string(data.get("TotalCapitalExpenditures"))
-    share_buybacks_and_dividend_payments = nullify_empty_string(data.get("ShareBuyBacksAndDividendPayments"))
+#     data = request.get_json()
+#     print(data)
+#     total_tax_paid = nullify_empty_string(data.get("TotalTaxPaid"))
+#     abs_number_of_new_emps = nullify_empty_string(data.get("AbsNumberOfNewEmps"))
+#     abs_number_of_new_emp_turnover = nullify_empty_string(data.get("AbsNumberOfNewEmpTurnover"))
+#     economic_contribution = nullify_empty_string(data.get("EconomicContribution"))
+#     total_rnd_expenses = nullify_empty_string(data.get("TotalRNDExpenses"))
+#     total_capital_expenditures = nullify_empty_string(data.get("TotalCapitalExpenditures"))
+#     share_buybacks_and_dividend_payments = nullify_empty_string(data.get("ShareBuyBacksAndDividendPayments"))
 
-    # Check if an entry with the submission_id already exists
-    existing_metric = Prosperitymetrics.query.filter_by(SubmissionID=submission_id).first()
+#     # Check if an entry with the submission_id already exists
+#     existing_metric = Prosperitymetrics.query.filter_by(SubmissionID=submission_id).first()
 
-    if existing_metric:
-        # Update the existing entry
-        existing_metric.TotalTaxPaid = total_tax_paid
-        existing_metric.AbsNumberOfNewEmps = abs_number_of_new_emps
-        existing_metric.AbsNumberOfNewEmpTurnover = abs_number_of_new_emp_turnover
-        existing_metric.EconomicContribution = economic_contribution
-        existing_metric.TotalRNDExpenses = total_rnd_expenses
-        existing_metric.TotalCapitalExpenditures = total_capital_expenditures
-        existing_metric.ShareBuyBacksAndDividendPayments = share_buybacks_and_dividend_payments
-    else:
-        # Create a new entry
-        new_metric = Prosperitymetrics(
-            TotalTaxPaid=total_tax_paid,
-            AbsNumberOfNewEmps=abs_number_of_new_emps,
-            AbsNumberOfNewEmpTurnover=abs_number_of_new_emp_turnover,
-            EconomicContribution=economic_contribution,
-            TotalRNDExpenses=total_rnd_expenses,
-            TotalCapitalExpenditures=total_capital_expenditures,
-            ShareBuyBacksAndDividendPayments=share_buybacks_and_dividend_payments,
-            SubmissionID=submission_id
-        )
-        db.session.add(new_metric)
+#     if existing_metric:
+#         # Update the existing entry
+#         existing_metric.TotalTaxPaid = total_tax_paid
+#         existing_metric.AbsNumberOfNewEmps = abs_number_of_new_emps
+#         existing_metric.AbsNumberOfNewEmpTurnover = abs_number_of_new_emp_turnover
+#         existing_metric.EconomicContribution = economic_contribution
+#         existing_metric.TotalRNDExpenses = total_rnd_expenses
+#         existing_metric.TotalCapitalExpenditures = total_capital_expenditures
+#         existing_metric.ShareBuyBacksAndDividendPayments = share_buybacks_and_dividend_payments
+#     else:
+#         # Create a new entry
+#         new_metric = Prosperitymetrics(
+#             TotalTaxPaid=total_tax_paid,
+#             AbsNumberOfNewEmps=abs_number_of_new_emps,
+#             AbsNumberOfNewEmpTurnover=abs_number_of_new_emp_turnover,
+#             EconomicContribution=economic_contribution,
+#             TotalRNDExpenses=total_rnd_expenses,
+#             TotalCapitalExpenditures=total_capital_expenditures,
+#             ShareBuyBacksAndDividendPayments=share_buybacks_and_dividend_payments,
+#             SubmissionID=submission_id
+#         )
+#         db.session.add(new_metric)
         
-    try:
-        db.session.commit()
-        return jsonify({
-            "success": True, 
-            "message": "Prosperity metrics added successfully"
-        }), 201
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({
-            "success": False,
-            "message": str(e)
-        }), 500
+#     try:
+#         db.session.commit()
+#         return jsonify({
+#             "success": True, 
+#             "message": "Prosperity metrics added successfully"
+#         }), 201
+#     except Exception as e:
+#         db.session.rollback()
+#         return jsonify({
+#             "success": False,
+#             "message": str(e)
+#         }), 500
 
-@app.route("/input_governancemetrics/<submission_id>", methods=["POST"])
-@jwt_required()
-def input_governancemetrics(submission_id):
+# @app.route("/input_governancemetrics/<submission_id>", methods=["POST"])
+# @jwt_required()
+# def input_governancemetrics(submission_id):
 
-    data = request.get_json()
-    print(data)
-    anti_corruption_training = nullify_empty_string(data.get("AntiCorruptionTraining"))
-    confirmed_corruption_incident_prev = nullify_empty_string(data.get("ConfirmedCorruptionIncidentPrev"))
-    confirmed_corruption_incident_current = nullify_empty_string(data.get("ConfirmedCorruptionIncidentCurrent"))
+#     data = request.get_json()
+#     print(data)
+#     anti_corruption_training = nullify_empty_string(data.get("AntiCorruptionTraining"))
+#     confirmed_corruption_incident_prev = nullify_empty_string(data.get("ConfirmedCorruptionIncidentPrev"))
+#     confirmed_corruption_incident_current = nullify_empty_string(data.get("ConfirmedCorruptionIncidentCurrent"))
 
-    existing_metric = Governancemetrics.query.filter_by(SubmissionID=submission_id).first()
+#     existing_metric = Governancemetrics.query.filter_by(SubmissionID=submission_id).first()
 
-    if existing_metric:
-        existing_metric.AntiCorruptionTraining = anti_corruption_training
-        existing_metric.ConfirmedCorruptionIncidentPrev = confirmed_corruption_incident_prev
-        existing_metric.ConfirmedCorruptionIncidentCurrent = confirmed_corruption_incident_current
-    else:
-        new_metric = Governancemetrics(
-            AntiCorruptionTraining=anti_corruption_training,
-            ConfirmedCorruptionIncidentPrev=confirmed_corruption_incident_prev,
-            ConfirmedCorruptionIncidentCurrent=confirmed_corruption_incident_current,
-            SubmissionID=submission_id
-        )
-        db.session.add(new_metric)
+#     if existing_metric:
+#         existing_metric.AntiCorruptionTraining = anti_corruption_training
+#         existing_metric.ConfirmedCorruptionIncidentPrev = confirmed_corruption_incident_prev
+#         existing_metric.ConfirmedCorruptionIncidentCurrent = confirmed_corruption_incident_current
+#     else:
+#         new_metric = Governancemetrics(
+#             AntiCorruptionTraining=anti_corruption_training,
+#             ConfirmedCorruptionIncidentPrev=confirmed_corruption_incident_prev,
+#             ConfirmedCorruptionIncidentCurrent=confirmed_corruption_incident_current,
+#             SubmissionID=submission_id
+#         )
+#         db.session.add(new_metric)
 
 
-    try:
-        db.session.commit()
-        return jsonify({
-            "success": True, 
-            "message": "Governance metrics added successfully"
-        }), 201
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({
-            "success": False,
-            "message": str(e)
-        }), 500
+#     try:
+#         db.session.commit()
+#         return jsonify({
+#             "success": True, 
+#             "message": "Governance metrics added successfully"
+#         }), 201
+#     except Exception as e:
+#         db.session.rollback()
+#         return jsonify({
+#             "success": False,
+#             "message": str(e)
+#         }), 500
 
 @app.route("/trans/<submission_id>", methods=["POST"])
 @jwt_required()
@@ -404,8 +817,12 @@ def trans(submission_id):
 
     submission = Submission.query.get(submission_id)
     
+    # # List of models to fetch data from
+    # models = [Peoplemetrics, Planetmetrics, Prosperitymetrics, Governancemetrics]
+
     # List of models to fetch data from
-    models = [Peoplemetrics, Planetmetrics, Prosperitymetrics, Governancemetrics]
+    models = [SocialMetrics, EnvironmentalMetrics, GovernanceMetrics]  # Updated models
+
 
     # Fetch metrics and create a combined dictionary
     data = {}
