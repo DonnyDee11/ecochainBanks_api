@@ -36,10 +36,12 @@ class Submission(db.Model):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 class SocialMetrics(db.Model):
-    __tablename__ = 'social_metrics'
-
     SocialMetricsID = db.Column(db.Integer, primary_key=True)
     SubmissionID = db.Column(db.Integer, db.ForeignKey('submission.SubmissionID'), nullable=False)
+
+    # Customer Satisfaction
+    CustomerComplaints = db.Column(db.Integer, nullable=True)
+    CustomerSatisfactionScore = db.Column(db.Float, nullable=True)
 
     # Human Capital Development
     PermanentEmployeesMale = db.Column(db.Integer, nullable=True)
@@ -49,6 +51,53 @@ class SocialMetrics(db.Model):
     FullTimeEmployeesFemale = db.Column(db.Integer, nullable=True)
     PartTimeEmployeesMale = db.Column(db.Integer, nullable=True)
     PartTimeEmployeesFemale = db.Column(db.Integer, nullable=True)
+    EmployeeTurnoverRate = db.Column(db.Float, nullable=True)  
+    TrainingAndDevelopmentSpendPerEmployee = db.Column(db.Float, nullable=True) 
+    LostTimeInjuryFrequencyRate = db.Column(db.Float, nullable=True) 
+    EmployeeEngagementScore = db.Column(db.Float, nullable=True) 
+    GenderPayGap = db.Column(db.String(100), nullable=True)  
+
+    # Training, Bursaries & Learnerships
+    TotalTrainingSpend = db.Column(db.Float, nullable=True)
+    TotalTrainingSpendBasicPayroll = db.Column(db.Float, nullable=True)
+    TrainingSpendPerEmployee = db.Column(db.Float, nullable=True)
+    TrainingBeneficiaries = db.Column(db.Integer, nullable=True)
+    AverageTrainingHours = db.Column(db.Float, nullable=True)
+    TrainingSpendBlackEmployees = db.Column(db.Float, nullable=True)
+    TrainingSpendBlackFemaleEmployees = db.Column(db.Float, nullable=True)
+    TrainingSpendBlackFemaleEmployeesWithDisabilities = db.Column(db.Float, nullable=True)
+    TrainingSpendFemaleEmployees = db.Column(db.Float, nullable=True)
+    TrainingSpendFemaleEmployeesWithDisabilities = db.Column(db.Float, nullable=True)
+    TotalInternalBursaries = db.Column(db.Integer, nullable=True)
+    ActualPaymentOnBursaries = db.Column(db.Float, nullable=True)
+    LearnershipOfferedToUnemployedAndDisabled = db.Column(db.Integer, nullable=True)
+    LearnershipsAndInternships = db.Column(db.Integer, nullable=True)
+    LearnershipStudentsAdsorbedIntoEmployment = db.Column(db.Integer, nullable=True)
+    NumberEmployeesAttendedManagementLeadership = db.Column(db.Integer, nullable=True)
+
+    # Graduate Program
+    TotalGraduateProgramIntake = db.Column(db.Integer, nullable=True)
+    GraduateProgramIntakeFemale = db.Column(db.Integer, nullable=True)
+    TotalGraduateProgramAbsorption = db.Column(db.Integer, nullable=True)
+    GraduateProgramAbsorptionRate = db.Column(db.Float, nullable=True) 
+
+    # Employee Profile & Movements
+    TotalNumberOfEmployeesBeginningYear = db.Column(db.Integer, nullable=True)
+    TotalNumberOfEmployeesEndOfYear = db.Column(db.Integer, nullable=True)
+    NewHiresPermanentEmployees = db.Column(db.Integer, nullable=True) 
+    NewHiresPermanentEmployeesWith3MonthsProbation = db.Column(db.Integer, nullable=True) 
+    TemporaryEmployees = db.Column(db.Integer, nullable=True) 
+    TerminationsPermanentEmployees = db.Column(db.Integer, nullable=True) 
+    Resignations = db.Column(db.Integer, nullable=True)
+    VoluntaryRetrenchments = db.Column(db.Integer, nullable=True)
+    InvoluntaryRetrenchments = db.Column(db.Integer, nullable=True) 
+    Dismissals = db.Column(db.Integer, nullable=True)
+    NonTemporaryEmployees = db.Column(db.Integer, nullable=True) 
+    TotalEmployeeInternalTransfers = db.Column(db.Integer, nullable=True)
+    VacanciesFilledByInternalCandidates = db.Column(db.Integer, nullable=True)
+    InternalPromotionalSuccessRate = db.Column(db.Float, nullable=True)
+    TotalEmployeePromotions = db.Column(db.Integer, nullable=True)
+    NewHiresWomen = db.Column(db.Integer, nullable=True)
 
     # Per Region
     SouthAfricanEmployeesMale = db.Column(db.Integer, nullable=True)
@@ -92,6 +141,81 @@ class SocialMetrics(db.Model):
     Tenure31To40Years = db.Column(db.Integer, nullable=True)
     TenureMoreThan40Years = db.Column(db.Integer, nullable=True)
 
+    # Top Management
+    TopManagementTotalNumber = db.Column(db.Integer, nullable=True)
+    TopManagementMaleEmployees = db.Column(db.Integer, nullable=True)
+    TopManagementFemaleEmployees = db.Column(db.Integer, nullable=True)
+    TopManagementBlackMaleEmployees = db.Column(db.Integer, nullable=True)
+    TopManagementBlackFemaleEmployees = db.Column(db.Integer, nullable=True)
+    TopManagementAfricanEmployees = db.Column(db.Integer, nullable=True)
+    TopManagementColouredEmployees = db.Column(db.Integer, nullable=True)
+    TopManagementIndianEmployees = db.Column(db.Integer, nullable=True)
+    TopManagementAsianEmployees = db.Column(db.Integer, nullable=True)
+    TopManagementWhiteEmployees = db.Column(db.Integer, nullable=True)
+    TopManagementDisabledEmployees = db.Column(db.Integer, nullable=True)
+
+    # Senior Management
+    SeniorManagementTotalNumber = db.Column(db.Integer, nullable=True) 
+    SeniorManagementMaleEmployees = db.Column(db.Integer, nullable=True) 
+    SeniorManagementFemaleEmployees = db.Column(db.Integer, nullable=True) 
+    SeniorManagementBlackMaleEmployees = db.Column(db.Integer, nullable=True) 
+    SeniorManagementBlackFemaleEmployees = db.Column(db.Integer, nullable=True) 
+    SeniorManagementACIEmployees = db.Column(db.Integer, nullable=True) 
+    SeniorManagementColouredEmployees = db.Column(db.Integer, nullable=True) 
+    SeniorManagementIndianEmployees = db.Column(db.Integer, nullable=True) 
+    SeniorManagementAsianEmployees = db.Column(db.Integer, nullable=True)
+    SeniorManagementWhiteEmployees = db.Column(db.Integer, nullable=True)
+    SeniorManagementDisabledEmployees = db.Column(db.Integer, nullable=True)
+
+    # Middle Management
+    MiddleManagementTotalNumber = db.Column(db.Integer, nullable=True) 
+    MiddleManagementMaleEmployees = db.Column(db.Integer, nullable=True)
+    MiddleManagementFemaleEmployees = db.Column(db.Integer, nullable=True)
+    MiddleManagementBlackEmployees = db.Column(db.Integer, nullable=True)
+    MiddleManagementACIEmployees = db.Column(db.Integer, nullable=True)
+    MiddleManagementColouredEmployees = db.Column(db.Integer, nullable=True)
+    MiddleManagementIndianEmployees = db.Column(db.Integer, nullable=True)
+    MiddleManagementAsianEmployees = db.Column(db.Integer, nullable=True)
+    MiddleManagementWhiteEmployees = db.Column(db.Integer, nullable=True)
+    MiddleManagementDisabledEmployees = db.Column(db.Integer, nullable=True)
+
+    # Junior Management
+    JuniorManagementTotalNumber = db.Column(db.Integer, nullable=True) 
+    JuniorManagementMaleEmployees = db.Column(db.Integer, nullable=True) 
+    JuniorManagementFemaleEmployees = db.Column(db.Integer, nullable=True) 
+    JuniorManagementBlackMaleEmployees = db.Column(db.Integer, nullable=True) 
+    JuniorManagementBlackFemaleEmployees = db.Column(db.Integer, nullable=True) 
+    JuniorManagementACIEmployees = db.Column(db.Integer, nullable=True) 
+    JuniorManagementColouredEmployees = db.Column(db.Integer, nullable=True)
+    JuniorManagementIndianEmployees = db.Column(db.Integer, nullable=True)
+    JuniorManagementAsianEmployees = db.Column(db.Integer, nullable=True)
+    JuniorManagementWhiteEmployees = db.Column(db.Integer, nullable=True)
+    JuniorManagementDisabledEmployees = db.Column(db.Integer, nullable=True)
+
+    # Semi-Skilled
+    SemiSkilledTotalNumber = db.Column(db.Integer, nullable=True) 
+    SemiSkilledFemaleEmployees = db.Column(db.Integer, nullable=True) 
+    SemiSkilledBlackMaleEmployees = db.Column(db.Integer, nullable=True) 
+    SemiSkilledBlackFemaleEmployees = db.Column(db.Integer, nullable=True) 
+    SemiSkilledACIEmployees = db.Column(db.Integer, nullable=True) 
+    SemiSkilledColouredEmployees = db.Column(db.Integer, nullable=True) 
+    SemiSkilledIndianEmployees = db.Column(db.Integer, nullable=True) 
+    SemiSkilledAsianEmployees = db.Column(db.Integer, nullable=True)
+    SemiSkilledWhiteEmployees = db.Column(db.Integer, nullable=True)
+    SemiSkilledDisabledEmployees = db.Column(db.Integer, nullable=True)
+
+    # Unskilled
+    UnskilledTotalNumber = db.Column(db.Integer, nullable=True)
+    UnskilledFemaleEmployees = db.Column(db.Integer, nullable=True)
+    UnskilledBlackMaleEmployees = db.Column(db.Integer, nullable=True)
+    UnskilledBlackFemaleEmployees = db.Column(db.Integer, nullable=True)
+    UnskilledACIEmployees = db.Column(db.Integer, nullable=True)
+    UnskilledColouredEmployees = db.Column(db.Integer, nullable=True)
+    UnskilledIndianEmployees = db.Column(db.Integer, nullable=True)
+    UnskilledAsianEmployees = db.Column(db.Integer, nullable=True)
+    UnskilledWhiteEmployees = db.Column(db.Integer, nullable=True)
+    UnskilledDisabledEmployees = db.Column(db.Integer, nullable=True)
+
     # Additional Labor Statistics
     EmployeeCostsAndBenefits = db.Column(db.Float, nullable=True)
     TotalBasicPayrollRands = db.Column(db.Float, nullable=True)
@@ -110,92 +234,6 @@ class SocialMetrics(db.Model):
     NumberofFatalitiesBankMembers = db.Column(db.Integer, nullable=True)
     NumberofFatalitiesNonBankMembers = db.Column(db.Integer, nullable=True)
 
-    # Top Management
-    TopManagementMaleEmployees = db.Column(db.Integer, nullable=True)
-    TopManagementBlackMaleEmployees = db.Column(db.Integer, nullable=True)
-    TopManagementBlackFemaleEmployees = db.Column(db.Integer, nullable=True)
-    TopManagementAfricanEmployees = db.Column(db.Integer, nullable=True)
-    TopManagementIndianEmployees = db.Column(db.Integer, nullable=True)
-
-    # Senior Management
-    SeniorManagementTotalNumber = db.Column(db.Integer, nullable=True) 
-    SeniorManagementFemaleEmployees = db.Column(db.Integer, nullable=True) 
-    SeniorManagementBlackMaleEmployees = db.Column(db.Integer, nullable=True) 
-    SeniorManagementBlackFemaleEmployees = db.Column(db.Integer, nullable=True) 
-    SeniorManagementColouredEmployees = db.Column(db.Integer, nullable=True) 
-    SeniorManagementIndianEmployees = db.Column(db.Integer, nullable=True) 
-
-    # Middle Management
-    MiddleManagementTotalNumber = db.Column(db.Integer, nullable=True) 
-    MiddleManagementMaleEmployees = db.Column(db.Integer, nullable=True)
-    MiddleManagementFemaleEmployees = db.Column(db.Integer, nullable=True)
-    MiddleManagementBlackEmployees = db.Column(db.Integer, nullable=True)
-    MiddleManagementACIEmployees = db.Column(db.Integer, nullable=True)
-    MiddleManagementColouredEmployees = db.Column(db.Integer, nullable=True)
-    MiddleManagementIndianEmployees = db.Column(db.Integer, nullable=True)
-
-    # Junior Management
-    JuniorManagementTotalNumber = db.Column(db.Integer, nullable=True) 
-    JuniorManagementMaleEmployees = db.Column(db.Integer, nullable=True) 
-    JuniorManagementFemaleEmployees = db.Column(db.Integer, nullable=True) 
-    JuniorManagementBlackMaleEmployees = db.Column(db.Integer, nullable=True) 
-    JuniorManagementBlackFemaleEmployees = db.Column(db.Integer, nullable=True) 
-    JuniorManagementACIEmployees = db.Column(db.Integer, nullable=True) 
-    JuniorManagementIndianEmployees = db.Column(db.Integer, nullable=True) 
-
-    # Semi-Skilled
-    SemiSkilledTotalNumber = db.Column(db.Integer, nullable=True) 
-    SemiSkilledFemaleEmployees = db.Column(db.Integer, nullable=True) 
-    SemiSkilledBlackMaleEmployees = db.Column(db.Integer, nullable=True) 
-    SemiSkilledBlackFemaleEmployees = db.Column(db.Integer, nullable=True) 
-    SemiSkilledColouredEmployees = db.Column(db.Integer, nullable=True) 
-    SemiSkilledIndianEmployees = db.Column(db.Integer, nullable=True)
-
-    # Employee Profile & Movements
-    # Employee Profile
-    TotalNumberOfEmployeesBeginningYear = db.Column(db.Integer, nullable=True)
-    TotalNumberOfEmployeesEndOfYear = db.Column(db.Integer, nullable=True)
-    NewHiresPermanentEmployees = db.Column(db.Integer, nullable=True) 
-    NewHiresPermanentEmployeesWith3MonthsProbation = db.Column(db.Integer, nullable=True) 
-    TemporaryEmployees = db.Column(db.Integer, nullable=True) 
-    TerminationsPermanentEmployees = db.Column(db.Integer, nullable=True) 
-    Resignations = db.Column(db.Integer, nullable=True)
-    VoluntaryRetrenchments = db.Column(db.Integer, nullable=True)
-    InvoluntaryRetrenchments = db.Column(db.Integer, nullable=True) 
-    Dismissals = db.Column(db.Integer, nullable=True)
-    NonTemporaryEmployees = db.Column(db.Integer, nullable=True) 
-    TotalEmployeeInternalTransfers = db.Column(db.Integer, nullable=True)
-
-    # Employee Movements
-    VacanciesFilledByInternalCandidates = db.Column(db.Integer, nullable=True)
-    InternalPromotionalSuccessRate = db.Column(db.Float, nullable=True)  # Assuming percentage
-    TotalEmployeePromotions = db.Column(db.Integer, nullable=True)
-    NewHiresWomen = db.Column(db.Integer, nullable=True)
-
-    # Training, Bursaries & Learnerships
-    TotalTrainingSpend = db.Column(db.Float, nullable=True)
-    TotalTrainingSpendBasicPayroll = db.Column(db.Float, nullable=True)
-    TrainingSpendPerEmployee = db.Column(db.Float, nullable=True)
-    TrainingBeneficiaries = db.Column(db.Integer, nullable=True)
-    AverageTrainingHours = db.Column(db.Float, nullable=True)
-    TrainingSpendBlackEmployees = db.Column(db.Float, nullable=True)
-    TrainingSpendBlackFemaleEmployees = db.Column(db.Float, nullable=True)
-    TrainingSpendBlackFemaleEmployeesWithDisabilities = db.Column(db.Float, nullable=True)
-    TrainingSpendFemaleEmployees = db.Column(db.Float, nullable=True)
-    TrainingSpendFemaleEmployeesWithDisabilities = db.Column(db.Float, nullable=True)
-    TotalInternalBursaries = db.Column(db.Integer, nullable=True)
-    ActualPaymentOnBursaries = db.Column(db.Float, nullable=True)
-    LearnershipOfferedToUnemployedAndDisabled = db.Column(db.Integer, nullable=True)
-    LearnershipsAndInternships = db.Column(db.Integer, nullable=True)
-    LearnershipStudentsAdsorbedIntoEmployment = db.Column(db.Integer, nullable=True)
-    NumberEmployeesAttendedManagementLeadership = db.Column(db.Integer, nullable=True)
-
-    # Graduate Program
-    TotalGraduateProgramIntake = db.Column(db.Integer, nullable=True)
-    GraduateProgramIntakeFemale = db.Column(db.Integer, nullable=True)
-    TotalGraduateProgramAbsorption = db.Column(db.Integer, nullable=True)
-    GraduateProgramAbsorptionRate = db.Column(db.Float, nullable=True)
-
     # Financial Inclusion
     MortgageLoansGranted = db.Column(db.Integer, nullable=True)
     MortgageLoansValueTotal = db.Column(db.Float, nullable=True)
@@ -208,9 +246,6 @@ class SocialMetrics(db.Model):
     POSDevices = db.Column(db.Integer, nullable=True)
     TotalClients = db.Column(db.Integer, nullable=True)
     DigitallyActiveClients = db.Column(db.Integer, nullable=True)
-
-    # Digital Footprint
-    DigitallyActiveClients = db.Column(db.Integer, nullable=True) 
 
     # Suppliers
     TotalNumberSuppliers = db.Column(db.Integer, nullable=True)
@@ -228,8 +263,6 @@ class SocialMetrics(db.Model):
 
 
 class EnvironmentalMetrics(db.Model):
-    __tablename__ = 'environmental_metrics'
-
     EnvironmentalMetricsID = db.Column(db.Integer, primary_key=True)
     SubmissionID = db.Column(db.Integer, db.ForeignKey('submission.SubmissionID'), nullable=False)
 
@@ -237,7 +270,7 @@ class EnvironmentalMetrics(db.Model):
     TotalEnergyUse = db.Column(db.Float, nullable=True)
     TotalRenewableEnergy = db.Column(db.Float, nullable=True) 
     TotalNonRenewableEnergy = db.Column(db.Float, nullable=True) 
-    NonRenewableEnergySources = db.Column(db.String, nullable=True)  # Assuming a comma-separated list or similar
+    NonRenewableEnergySources = db.Column(db.String, nullable=True)  
 
     # Greenhouse gas emissions
     CarbonEmissions = db.Column(db.Float, nullable=True)
@@ -265,8 +298,6 @@ class EnvironmentalMetrics(db.Model):
 
 
 class GovernanceMetrics(db.Model):
-    __tablename__ = 'governance_metrics'
-
     GovernanceMetricsID = db.Column(db.Integer, primary_key=True)
     SubmissionID = db.Column(db.Integer, db.ForeignKey('submission.SubmissionID'), nullable=False)
 
@@ -275,7 +306,7 @@ class GovernanceMetrics(db.Model):
     IndependentNonExecutiveDirectors = db.Column(db.Integer, nullable=True) 
     ExecutiveDirectors = db.Column(db.Integer, nullable=True)
     NonExecutiveDirectors = db.Column(db.Integer, nullable=True)
-    IndependentBoardChairman = db.Column(db.String(50), nullable=True)  # Yes/No 
+    IndependentBoardChairman = db.Column(db.String(50), nullable=True)  
     BlackACIExecutiveBoardMembers = db.Column(db.Integer, nullable=True) 
     BlackACIWomenExecutiveBoardMembers = db.Column(db.Integer, nullable=True)
     BlackACIIndependentNonExecutiveBoardMembers = db.Column(db.Integer, nullable=True)
@@ -321,8 +352,8 @@ class GovernanceMetrics(db.Model):
     ExcoMembersMoreThan20Years = db.Column(db.Integer, nullable=True)
 
     # Shareholder Rights
-    ControllingShareholder = db.Column(db.String(50), nullable=True)  # Yes/No
-    MultipleShareholderRights = db.Column(db.String(50), nullable=True)  # Yes/No
+    ControllingShareholder = db.Column(db.String(50), nullable=True) 
+    MultipleShareholderRights = db.Column(db.String(50), nullable=True)  
 
     # CEO Shareholding
     BeneficialSharesDirectOwnershipCEO = db.Column(db.Integer, nullable=True)
@@ -340,7 +371,7 @@ class GovernanceMetrics(db.Model):
     TotalSharesOwnedCOO = db.Column(db.Integer, nullable=True)
 
     # Audit
-    Auditors = db.Column(db.String(100), nullable=True)  # Could be a choice from a list
+    Auditors = db.Column(db.String(100), nullable=True) 
     AuditorTenure = db.Column(db.Integer, nullable=True)  
     AuditFees = db.Column(db.Float, nullable=True)  
 
@@ -364,7 +395,7 @@ class GovernanceMetrics(db.Model):
     COOGuaranteedPackage = db.Column(db.Float, nullable=True) 
     COOShortTermIncentive = db.Column(db.Float, nullable=True)
     COOLongTermIncentive = db.Column(db.Float, nullable=True)
-    COOTotalRemuneration = db.Column(db.Float, nullable=True)
+    COOTotalRemuneration = db.Column(db.Float, nullable=True) 
 
     # Ethics and integrity (additional metrics)
     EmployeesCompletedEthicsTraining = db.Column(db.Integer, nullable=True) 
@@ -379,8 +410,8 @@ class GovernanceMetrics(db.Model):
     EthicalDisciplinaryCasesConcluded = db.Column(db.Integer, nullable=True)
     OngoingDisciplinaryCases = db.Column(db.Integer, nullable=True)
 
-    # DATA PRIVACY & SECURITY
-    SystemAvailability = db.Column(db.Float, nullable=True)  # Assuming percentage
+    # Additional Metrics (from the image, category unclear)
+    SystemAvailability = db.Column(db.Float, nullable=True) 
     PrivacyRelatedIncidents = db.Column(db.Integer, nullable=True)
     PrivacyRelatedIncidentsReportedToRegulator = db.Column(db.Integer, nullable=True)
 

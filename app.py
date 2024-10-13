@@ -3,7 +3,7 @@ from flask_jwt_extended import JWTManager, jwt_required, create_access_token, ge
 from flask_cors import CORS, cross_origin
 from werkzeug.security import generate_password_hash, check_password_hash
 import argparse
-from models import db, User, Transaction, Submission, Peoplemetrics, Planetmetrics, Prosperitymetrics, Governancemetrics
+# from models import db, User, Transaction, Submission, Peoplemetrics, Planetmetrics, Prosperitymetrics, Governancemetrics
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.inspection import inspect
 from algosdk import account
@@ -230,207 +230,19 @@ def nullify_empty_string(string):
 @jwt_required()
 def input_social_metrics(submission_id):
     data = request.get_json()
+    print(data)
 
-    # Extract and process social metrics data from the request
-    social_metrics_data = {
-    'CustomerComplaints': data.get('CustomerComplaints'),
-    'CustomerSatisfactionScore': data.get('CustomerSatisfactionScore'),
-
-    'PermanentEmployeesMale': data.get('PermanentEmployeesMale'),
-    'PermanentEmployeesFemale': data.get('PermanentEmployeesFemale'),
-    'TemporaryEmployees': data.get('TemporaryEmployees'),
-    'FullTimeEmployeesMale': data.get('FullTimeEmployeesMale'),
-    'FullTimeEmployeesFemale': data.get('FullTimeEmployeesFemale'),
-    'PartTimeEmployeesMale': data.get('PartTimeEmployeesMale'),
-    'PartTimeEmployeesFemale': data.get('PartTimeEmployeesFemale'),
-    'EmployeeTurnoverRate': data.get('EmployeeTurnoverRate'),
-    'TrainingAndDevelopmentSpendPerEmployee': data.get('TrainingAndDevelopmentSpendPerEmployee'),
-    'LostTimeInjuryFrequencyRate': data.get('LostTimeInjuryFrequencyRate'),
-    'EmployeeEngagementScore': data.get('EmployeeEngagementScore'),
-    'GenderPayGap': data.get('GenderPayGap'),
-
-    'TotalTrainingSpend': data.get('TotalTrainingSpend'),
-    'TotalTrainingSpendBasicPayroll': data.get('TotalTrainingSpendBasicPayroll'),
-    'TrainingSpendPerEmployee': data.get('TrainingSpendPerEmployee'),
-    'TrainingBeneficiaries': data.get('TrainingBeneficiaries'),
-    'AverageTrainingHours': data.get('AverageTrainingHours'),
-    'TrainingSpendBlackEmployees': data.get('TrainingSpendBlackEmployees'),
-    'TrainingSpendBlackFemaleEmployees': data.get('TrainingSpendBlackFemaleEmployees'),
-    'TrainingSpendBlackFemaleEmployeesWithDisabilities': data.get('TrainingSpendBlackFemaleEmployeesWithDisabilities'),
-    'TrainingSpendFemaleEmployees': data.get('TrainingSpendFemaleEmployees'),
-    'TrainingSpendFemaleEmployeesWithDisabilities': data.get('TrainingSpendFemaleEmployeesWithDisabilities'),
-    'TotalInternalBursaries': data.get('TotalInternalBursaries'),
-    'ActualPaymentOnBursaries': data.get('ActualPaymentOnBursaries'),
-    'LearnershipOfferedToUnemployedAndDisabled': data.get('LearnershipOfferedToUnemployedAndDisabled'),
-    'LearnershipsAndInternships': data.get('LearnershipsAndInternships'),
-    'LearnershipStudentsAdsorbedIntoEmployment': data.get('LearnershipStudentsAdsorbedIntoEmployment'),
-    'NumberEmployeesAttendedManagementLeadership': data.get('NumberEmployeesAttendedManagementLeadership'),
-
-    'TotalGraduateProgramIntake': data.get('TotalGraduateProgramIntake'),
-    'GraduateProgramIntakeFemale': data.get('GraduateProgramIntakeFemale'),
-    'TotalGraduateProgramAbsorption': data.get('TotalGraduateProgramAbsorption'),
-    'GraduateProgramAbsorptionRate': data.get('GraduateProgramAbsorptionRate'),
-
-    'SouthAfricanEmployeesMale': data.get('SouthAfricanEmployeesMale'),
-    'SouthAfricanEmployeesFemale': data.get('SouthAfricanEmployeesFemale'),
-    'InternationalEmployeesMale': data.get('InternationalEmployeesMale'),
-    'InternationalEmployeesFemale': data.get('InternationalEmployeesFemale'),
-
-    'BlackFemaleEmployees': data.get('BlackFemaleEmployees'),
-    'ColouredEmployees': data.get('ColouredEmployees'),
-    'IndianEmployees': data.get('IndianEmployees'),
-    'AsianEmployees': data.get('AsianEmployees'),
-    'WhiteEmployees': data.get('WhiteEmployees'),
-    'MaleEmployees': data.get('MaleEmployees'),
-    'FemaleEmployees': data.get('FemaleEmployees'),
-    'DisabilityRepresentationNumberOfEmployees': data.get('DisabilityRepresentationNumberOfEmployees'),
-
-    'LessThan20YearsMale': data.get('LessThan20YearsMale'),
-    'LessThan20YearsFemale': data.get('LessThan20YearsFemale'),
-    'Between20And29YearsMale': data.get('Between20And29YearsMale'),
-    'Between20And29YearsFemale': data.get('Between20And29YearsFemale'),
-    'Between30And39YearsMale': data.get('Between30And39YearsMale'),
-    'Between30And39YearsFemale': data.get('Between30And39YearsFemale'),
-    'Between40And49YearsMale': data.get('Between40And49YearsMale'),
-    'Between40And49YearsFemale': data.get('Between40And49YearsFemale'),
-    'Between50And59YearsMale': data.get('Between50And59YearsMale'),
-    'Between50And59YearsFemale': data.get('Between50And59YearsFemale'),
-    'Between60And69YearsMale': data.get('Between60And69YearsMale'),
-    'Between60And69YearsFemale': data.get('Between60And69YearsFemale'),
-    'Over69YearsMale': data.get('Over69YearsMale'),
-    'Over69YearsFemale': data.get('Over69YearsFemale'),
-
-    'TenureLessThan1Year': data.get('TenureLessThan1Year'),
-    'Tenure1To3Years': data.get('Tenure1To3Years'),
-    'Tenure4To6Years': data.get('Tenure4To6Years'),
-    'Tenure7To9Years': data.get('Tenure7To9Years'),
-    'Tenure10To20Years': data.get('Tenure10To20Years'),
-    'Tenure21To30Years': data.get('Tenure21To30Years'),
-    'Tenure31To40Years': data.get('Tenure31To40Years'),
-    'TenureMoreThan40Years': data.get('TenureMoreThan40Years'),
-
-    # Top Management
-    'TopManagementTotalNumber': data.get('TopManagementTotalNumber'),
-    'TopManagementMaleEmployees': data.get('TopManagementMaleEmployees'),
-    'TopManagementFemaleEmployees': data.get('TopManagementFemaleEmployees'),
-    'TopManagementBlackMaleEmployees': data.get('TopManagementBlackMaleEmployees'),
-    'TopManagementBlackFemaleEmployees': data.get('TopManagementBlackFemaleEmployees'),
-    'TopManagementAfricanEmployees': data.get('TopManagementAfricanEmployees'),
-    'TopManagementColouredEmployees': data.get('TopManagementColouredEmployees'),
-    'TopManagementIndianEmployees': data.get('TopManagementIndianEmployees'),
-    'TopManagementAsianEmployees': data.get('TopManagementAsianEmployees'),
-    'TopManagementWhiteEmployees': data.get('TopManagementWhiteEmployees'),
-    'TopManagementDisabledEmployees': data.get('TopManagementDisabledEmployees'),
-
-    # Senior Management
-    'SeniorManagementTotalNumber': data.get('SeniorManagementTotalNumber'),
-    'SeniorManagementMaleEmployees': data.get('SeniorManagementMaleEmployees'),
-    'SeniorManagementFemaleEmployees': data.get('SeniorManagementFemaleEmployees'),
-    'SeniorManagementBlackMaleEmployees': data.get('SeniorManagementBlackMaleEmployees'),
-    'SeniorManagementBlackFemaleEmployees': data.get('SeniorManagementBlackFemaleEmployees'),
-    'SeniorManagementACIEmployees': data.get('SeniorManagementACIEmployees'),
-    'SeniorManagementColouredEmployees': data.get('SeniorManagementColouredEmployees'),
-    'SeniorManagementIndianEmployees': data.get('SeniorManagementIndianEmployees'),
-    'SeniorManagementAsianEmployees': data.get('SeniorManagementAsianEmployees'),
-    'SeniorManagementWhiteEmployees': data.get('SeniorManagementWhiteEmployees'),
-    'SeniorManagementDisabledEmployees': data.get('SeniorManagementDisabledEmployees'),
-
-    # Middle Management
-    'MiddleManagementTotalNumber': data.get('MiddleManagementTotalNumber'),
-    'MiddleManagementMaleEmployees': data.get('MiddleManagementMaleEmployees'),
-    'MiddleManagementFemaleEmployees': data.get('MiddleManagementFemaleEmployees'),
-    'MiddleManagementBlackEmployees': data.get('MiddleManagementBlackEmployees'),
-    'MiddleManagementACIEmployees': data.get('MiddleManagementACIEmployees'),
-    'MiddleManagementColouredEmployees': data.get('MiddleManagementColouredEmployees'),
-    'MiddleManagementIndianEmployees': data.get('MiddleManagementIndianEmployees'),
-    'MiddleManagementAsianEmployees': data.get('MiddleManagementAsianEmployees'),
-    'MiddleManagementWhiteEmployees': data.get('MiddleManagementWhiteEmployees'),
-    'MiddleManagementDisabledEmployees': data.get('MiddleManagementDisabledEmployees'),
-
-    # Junior Management
-    'JuniorManagementTotalNumber': data.get('JuniorManagementTotalNumber'), 
-    'JuniorManagementMaleEmployees': data.get('JuniorManagementMaleEmployees'), 
-    'JuniorManagementFemaleEmployees': data.get('JuniorManagementFemaleEmployees'), 
-    'JuniorManagementBlackMaleEmployees': data.get('JuniorManagementBlackMaleEmployees'), 
-    'JuniorManagementBlackFemaleEmployees': data.get('JuniorManagementBlackFemaleEmployees'), 
-    'JuniorManagementColouredEmployees': data.get('JuniorManagementColouredEmployees'),
-    'JuniorManagementIndianEmployees': data.get('JuniorManagementIndianEmployees'),
-    'JuniorManagementAsianEmployees': data.get('JuniorManagementAsianEmployees'),
-    'JuniorManagementWhiteEmployees': data.get('JuniorManagementWhiteEmployees'),
-    'JuniorManagementDisabledEmployees': data.get('JuniorManagementDisabledEmployees'),
-
-    # Semi-Skilled
-    'SemiSkilledTotalNumber': data.get('SemiSkilledTotalNumber'), 
-    'SemiSkilledFemaleEmployees': data.get('SemiSkilledFemaleEmployees'), 
-    'SemiSkilledBlackMaleEmployees': data.get('SemiSkilledBlackMaleEmployees'), 
-    'SemiSkilledBlackFemaleEmployees': data.get('SemiSkilledBlackFemaleEmployees'), 
-    'SemiSkilledACIEmployees': data.get('SemiSkilledACIEmployees'), 
-    'SemiSkilledColouredEmployees': data.get('SemiSkilledColouredEmployees'), 
-    'SemiSkilledIndianEmployees': data.get('SemiSkilledIndianEmployees'), 
-    'SemiSkilledAsianEmployees': data.get('SemiSkilledAsianEmployees'),
-    'SemiSkilledWhiteEmployees': data.get('SemiSkilledWhiteEmployees'),
-    'SemiSkilledDisabledEmployees': data.get('SemiSkilledDisabledEmployees'),
-
-    # Unskilled
-    'UnskilledTotalNumber': data.get('UnskilledTotalNumber'),
-    'UnskilledFemaleEmployees': data.get('UnskilledFemaleEmployees'),
-    'UnskilledBlackMaleEmployees': data.get('UnskilledBlackMaleEmployees'),
-    'UnskilledBlackFemaleEmployees': data.get('UnskilledBlackFemaleEmployees'),
-    'UnskilledACIEmployees': data.get('UnskilledACIEmployees'),
-    'UnskilledColouredEmployees': data.get('UnskilledColouredEmployees'),
-    'UnskilledIndianEmployees': data.get('UnskilledIndianEmployees'),
-    'UnskilledAsianEmployees': data.get('UnskilledAsianEmployees'),
-    'UnskilledWhiteEmployees': data.get('UnskilledWhiteEmployees'),
-    'UnskilledDisabledEmployees': data.get('UnskilledDisabledEmployees'),
-
-    # Per Disability Type
-    'SensoryDisability': data.get('SensoryDisability'),
-    'PhysicalDisability': data.get('PhysicalDisability'),
-    'MentalDisability': data.get('MentalDisability'),
-    'MultipleDisabilities': data.get('MultipleDisabilities'),
-
-    # Financial Inclusion
-    'MortgageLoansGranted': data.get('MortgageLoansGranted'),
-    'MortgageLoansValueTotal': data.get('MortgageLoansValueTotal'),
-    'MortgageLoansAffordableHousingTotal': data.get('MortgageLoansAffordableHousingTotal'),
-    'MortgageLoansAffordableHousingValueTotal': data.get('MortgageLoansAffordableHousingValueTotal'),
-
-    # Physical Footprint
-    'Outlets': data.get('Outlets'),
-    'ATMs': data.get('ATMs'),
-    'POSDevices': data.get('POSDevices'),
-    'TotalClients': data.get('TotalClients'),
-    'DigitallyActiveClients': data.get('DigitallyActiveClients'),
-
-    # Digital Footprint
-    # 'DigitallyActiveClients': data.get('DigitallyActiveClients'),  # Already included above
-
-    # Suppliers
-    'TotalNumberSuppliers': data.get('TotalNumberSuppliers'),
-    'TotalProcurementSpend': data.get('TotalProcurementSpend'),
-    'TotalProcurementSpendExemptMicroenterprises': data.get('TotalProcurementSpendExemptMicroenterprises'),
-    'TotalProcurementSpendQualifyingSmallEnterprises': data.get('TotalProcurementSpendQualifyingSmallEnterprises'),
-    'TotalProcurementSpend51PercentBlackOwned': data.get('TotalProcurementSpend51PercentBlackOwned'),
-    'TotalProcurementSpend30PercentBlackOwned': data.get('TotalProcurementSpend30PercentBlackOwned'),
-    'LocalProcurementSpend': data.get('LocalProcurementSpend'),
-
-    # Regulators
-    'TotalEnvironmentalIncidents': data.get('TotalEnvironmentalIncidents'),
-    'TotalEnvironmentalFines': data.get('TotalEnvironmentalFines')
-    }
-
-    # Apply nullify_empty_string to all values
-    social_metrics_data = {k: nullify_empty_string(v) for k, v in social_metrics_data.items()}
-
+    # Assuming your SocialMetrics model is correctly defined with all the new metrics
     existing_metric = SocialMetrics.query.filter_by(SubmissionID=submission_id).first()
 
     if existing_metric:
-        # Update existing metrics
-        for key, value in social_metrics_data.items():
-            setattr(existing_metric, key, value)
+        # Update the existing entry
+        for key, value in data.items():
+            # Apply nullify_empty_string to each value
+            setattr(existing_metric, key, nullify_empty_string(value)) 
     else:
-        # Create new metrics record
-        new_metric = SocialMetrics(**social_metrics_data, SubmissionID=submission_id)
+        # Create a new entry
+        new_metric = SocialMetrics(**data, SubmissionID=submission_id)
         db.session.add(new_metric)
 
     try:
@@ -438,7 +250,7 @@ def input_social_metrics(submission_id):
         return jsonify({
             "success": True,
             "message": "Social metrics added/updated successfully"
-        }), 201  # Created or Updated
+        }), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({
@@ -451,47 +263,19 @@ def input_social_metrics(submission_id):
 @jwt_required()
 def input_environmental_metrics(submission_id):
     data = request.get_json()
+    print(data)
 
-    # Extract and process environmental metrics data
-    environmental_metrics_data = {
-    'TotalEnergyUse': data.get('TotalEnergyUse'),
-    'TotalRenewableEnergy': data.get('TotalRenewableEnergy'),
-    'TotalNonRenewableEnergy': data.get('TotalNonRenewableEnergy'),
-    'NonRenewableEnergySources': data.get('NonRenewableEnergySources'),
-
-    'CarbonEmissions': data.get('CarbonEmissions'),
-    'CarEmissions': data.get('CarEmissions'),
-    'RefrigerantGasEmissions': data.get('RefrigerantGasEmissions'),
-    'DieselGeneratorsEmissions': data.get('DieselGeneratorsEmissions'),
-    'ElectricityEmissions': data.get('ElectricityEmissions'),
-    'ATMEmissions': data.get('ATMEmissions'),
-    'TotalIndirectEmissions': data.get('TotalIndirectEmissions'),
-    'FlightEmissions': data.get('FlightEmissions'),
-    'CashInTransitEmissions': data.get('CashInTransitEmissions'),
-    'CarRentalsEmissions': data.get('CarRentalsEmissions'),
-    'CloudComputingEmissions': data.get('CloudComputingEmissions'),
-    'CourierEmissions': data.get('CourierEmissions'),
-    'PaperUsageEmissions': data.get('PaperUsageEmissions'),
-    'WasteDisposalEmissions': data.get('WasteDisposalEmissions'),
-    'EmployeeCommutingEmissions': data.get('EmployeeCommutingEmissions'),
-    'ElectricityTransmissionLossesEmissions': data.get('ElectricityTransmissionLossesEmissions'),
-    'CarbonEmissionsPerMeterSquared': data.get('CarbonEmissionsPerMeterSquared'),
-
-    'TotalWaste': data.get('TotalWaste'),
-    'RecycledWaste': data.get('RecycledWaste'),
-    'WasteToLandfill': data.get('WasteToLandfill')
-}
-
-    # Apply nullify_empty_string to all values
-    environmental_metrics_data = {k: nullify_empty_string(v) for k, v in environmental_metrics_data.items()}
-
+    # Assuming your EnvironmentalMetrics model is correctly defined with all the new metrics
     existing_metric = EnvironmentalMetrics.query.filter_by(SubmissionID=submission_id).first()
 
     if existing_metric:
-        for key, value in environmental_metrics_data.items():
-            setattr(existing_metric, key, value)
+        # Update the existing entry
+        for key, value in data.items():
+            # Apply nullify_empty_string to each value
+            setattr(existing_metric, key, nullify_empty_string(value)) 
     else:
-        new_metric = EnvironmentalMetrics(**environmental_metrics_data, SubmissionID=submission_id)
+        # Create a new entry
+        new_metric = EnvironmentalMetrics(**data, SubmissionID=submission_id)
         db.session.add(new_metric)
 
     try:
@@ -507,120 +291,23 @@ def input_environmental_metrics(submission_id):
             "message": str(e)
         }), 500
 
-
 @app.route("/input_governance_metrics/<submission_id>", methods=["POST"])
 @jwt_required()
 def input_governance_metrics(submission_id):
     data = request.get_json()
+    print(data)
 
-    governance_metrics_data = {
-    'NumberOfBoardMembers': data.get('NumberOfBoardMembers'),
-    'IndependentNonExecutiveDirectors': data.get('IndependentNonExecutiveDirectors'),
-    'ExecutiveDirectors': data.get('ExecutiveDirectors'),
-    'NonExecutiveDirectors': data.get('NonExecutiveDirectors'),
-    'IndependentBoardChairman': data.get('IndependentBoardChairman'),
-    'BlackACIExecutiveBoardMembers': data.get('BlackACIExecutiveBoardMembers'),
-    'BlackACIWomenExecutiveBoardMembers': data.get('BlackACIWomenExecutiveBoardMembers'),
-    'BlackACIIndependentNonExecutiveBoardMembers': data.get('BlackACIIndependentNonExecutiveBoardMembers'),
-
-    'TotalNumberOfBoardMeetings': data.get('TotalNumberOfBoardMeetings'),
-    'BoardTrainingHours': data.get('BoardTrainingHours'),
-
-    'WhiteMales': data.get('WhiteMales'),
-    'WhiteFemales': data.get('WhiteFemales'),
-    'ACIFemales': data.get('ACIFemales'),
-    'ACIMales': data.get('ACIMales'),
-    'NonSABoardMembers': data.get('NonSABoardMembers'),
-
-    'BoardMembersLessThan1Year': data.get('BoardMembersLessThan1Year'),
-    'BoardMembers1To3Years': data.get('BoardMembers1To3Years'),
-    'BoardMembers4To6Years': data.get('BoardMembers4To6Years'),
-    'BoardMembers7To9Years': data.get('BoardMembers7To9Years'),
-    'BoardMembersMoreThan9Years': data.get('BoardMembersMoreThan9Years'),
-    'BoardMembers40To49YearsAge': data.get('BoardMembers40To49YearsAge'),
-    'BoardMembers50To59YearsAge': data.get('BoardMembers50To59YearsAge'),
-    'BoardMembers60To69YearsAge': data.get('BoardMembers60To69YearsAge'),
-    'BoardMembers70Plus': data.get('BoardMembers70Plus'),
-
-    'TotalNumberOfExcoMembers': data.get('TotalNumberOfExcoMembers'),
-    'ExecutiveDirectorsExco': data.get('ExecutiveDirectorsExco'),
-    'PrescribedOfficers': data.get('PrescribedOfficers'),
-    'ExOfficioMembers': data.get('ExOfficioMembers'),
-    'WomenExcoMembers': data.get('WomenExcoMembers'),
-    'ACIExcoMembers': data.get('ACIExcoMembers'),
-
-    'ExcoMembers0To3Years': data.get('ExcoMembers0To3Years'),
-    'ExcoMembers4To6Years': data.get('ExcoMembers4To6Years'),
-    'ExcoMembers7To9Years': data.get('ExcoMembers7To9Years'),
-
-    'ExcoMembers0To10Years': data.get('ExcoMembers0To10Years'),
-    'ExcoMembers11To20Years': data.get('ExcoMembers11To20Years'),
-    'ExcoMembersMoreThan20Years': data.get('ExcoMembersMoreThan20Years'),
-
-    'ControllingShareholder': data.get('ControllingShareholder'),
-    'MultipleShareholderRights': data.get('MultipleShareholderRights'),
-
-    'BeneficialSharesDirectOwnershipCEO': data.get('BeneficialSharesDirectOwnershipCEO'),
-    'BeneficialSharesIndirectOwnershipCEO': data.get('BeneficialSharesIndirectOwnershipCEO'),
-    'TotalSharesOwnedCEO': data.get('TotalSharesOwnedCEO'),
-
-    'BeneficialSharesDirectOwnershipCFO': data.get('BeneficialSharesDirectOwnershipCFO'),
-    'BeneficialSharesIndirectOwnershipCFO': data.get('BeneficialSharesIndirectOwnershipCFO'),
-    'TotalSharesOwnedCFO': data.get('TotalSharesOwnedCFO'),
-
-    'BeneficialSharesDirectOwnershipCOO': data.get('BeneficialSharesDirectOwnershipCOO'),
-    'BeneficialSharesIndirectOwnershipCOO': data.get('BeneficialSharesIndirectOwnershipCOO'),
-    'TotalSharesOwnedCOO': data.get('TotalSharesOwnedCOO'),
-
-    'Auditors': data.get('Auditors'),
-    'AuditorTenure': data.get('AuditorTenure'),
-    'AuditFees': data.get('AuditFees'),
-
-    'ExecutiveRemunerationLinkedToESG': data.get('ExecutiveRemunerationLinkedToESG'),
-
-    'CEOGuaranteedPackage': data.get('CEOGuaranteedPackage'),
-    'CEOShortTermIncentive': data.get('CEOShortTermIncentive'),
-    'CEOLongTermIncentive': data.get('CEOLongTermIncentive'),
-    'CEOTotalRemuneration': data.get('CEOTotalRemuneration'),
-    'CEOSharePriceAsMultipleOfGuaranteedPackage': data.get('CEOSharePriceAsMultipleOfGuaranteedPackage'),
-
-    'CFOGuaranteedPackage': data.get('CFOGuaranteedPackage'),
-    'CFOShortTermIncentive': data.get('CFOShortTermIncentive'),
-    'CFOLongTermIncentive': data.get('CFOLongTermIncentive'),
-    'CFOTotalRemuneration': data.get('CFOTotalRemuneration'),
-
-    'COOGuaranteedPackage': data.get('COOGuaranteedPackage'),
-    'COOShortTermIncentive': data.get('COOShortTermIncentive'),
-    'COOLongTermIncentive': data.get('COOLongTermIncentive'),
-    'COOTotalRemuneration': data.get('COOTotalRemuneration'),
-
-    'EmployeesCompletedEthicsTraining': data.get('EmployeesCompletedEthicsTraining'),
-    'ContractorsCompletedEthicsTraining': data.get('ContractorsCompletedEthicsTraining'),
-    'SubsidiariesCompletedEthicsTraining': data.get('SubsidiariesCompletedEthicsTraining'),
-    'ReportedCases': data.get('ReportedCases'),
-    'CasesStillUnderInvestigation': data.get('CasesStillUnderInvestigation'),
-    'SubstantiatedCases': data.get('SubstantiatedCases'),
-    'UnsubstantiatedCases': data.get('UnsubstantiatedCases'),
-    'DisciplinaryCasesReported': data.get('DisciplinaryCasesReported'),
-    'DisciplinaryCasesConcluded': data.get('DisciplinaryCasesConcluded'),
-    'EthicalDisciplinaryCasesConcluded': data.get('EthicalDisciplinaryCasesConcluded'),
-    'OngoingDisciplinaryCases': data.get('OngoingDisciplinaryCases'),
-
-    'SystemAvailability': data.get('SystemAvailability'),
-    'PrivacyRelatedIncidents': data.get('PrivacyRelatedIncidents'),
-    'PrivacyRelatedIncidentsReportedToRegulator': data.get('PrivacyRelatedIncidentsReportedToRegulator')
-}
-
-    # Apply nullify_empty_string to all values
-    governance_metrics_data = {k: nullify_empty_string(v) for k, v in governance_metrics_data.items()}
-
+    # Assuming your GovernanceMetrics model is correctly defined with all the new metrics
     existing_metric = GovernanceMetrics.query.filter_by(SubmissionID=submission_id).first()
 
     if existing_metric:
-        for key, value in governance_metrics_data.items():
-            setattr(existing_metric, key, value)
+        # Update the existing entry
+        for key, value in data.items():
+            # Apply nullify_empty_string to each value
+            setattr(existing_metric, key, nullify_empty_string(value)) 
     else:
-        new_metric = GovernanceMetrics(**governance_metrics_data, SubmissionID=submission_id)
+        # Create a new entry
+        new_metric = GovernanceMetrics(**data, SubmissionID=submission_id)
         db.session.add(new_metric)
 
     try:
@@ -635,7 +322,6 @@ def input_governance_metrics(submission_id):
             "success": False,
             "message": str(e)
         }), 500
-
 
 
 # @app.route("/input_peoplemetrics/<submission_id>", methods=["POST"])
@@ -861,6 +547,11 @@ def trans(submission_id):
     # }), 200
     
     # Fetch metrics and create a combined dictionary
+    metric_metadata = {
+        "status": "Success",
+        # Add any other relevant metadata here
+    }
+
     nftData = {}
     grouped_metrics = {}
     for model in models:
@@ -882,7 +573,7 @@ def trans(submission_id):
     rec_privateKey = current_user.AlgorandPrivateKey
     transamount = 0
 
-    txid, confirmedTxn = first_transaction_example(private_key, my_address, rec_address, transamount,  nftData)
+    txid, confirmedTxn = first_transaction_example(private_key, my_address, rec_address, transamount, metric_metadata)
 
     # Check if confirmed_txn has the expected structure or keys
     if not confirmedTxn:
@@ -1256,6 +947,67 @@ def get_success_page(submission_id):
         #     "nft_id": transaction.NFTAssetID
         # }), 200
 
+# def generate_dummy_data():
+#     with app.app_context():
+#         users = User.query.all()
+
+#         # Add dummy submissions
+#         submissions = []
+#         for user in users:
+#             for _ in range(3):
+#                 submission = Submission(
+#                     FirstName=fake.first_name(),
+#                     LastName=fake.last_name(),
+#                     Date=fake.date_this_decade(),
+#                     Year=fake.year(),  # Generate a year
+#                     StartPeriod=fake.date_this_decade(),
+#                     EndPeriod=fake.date_this_decade(),
+#                     Score=random.uniform(0, 100),  # Generate a random score between 0 and 100
+#                     Status=random.choice([0, 1, 2]),  # Randomly choose a status
+#                     UserID=user.UserID
+#                 )
+#                 db.session.add(submission)
+#                 submissions.append(submission)
+
+#         db.session.commit()
+
+#         # Add dummy metrics
+#         for sub in submissions:
+#             db.session.add(Peoplemetrics(
+#                 DiversityAndInclusion=fake.random_number(digits=2),
+#                 PayEquality=fake.random_number(digits=2),
+#                 WageLevel=fake.random_number(digits=2),
+#                 HealthAndSafetyLevel=fake.random_number(digits=2),
+#                 SubmissionID=sub.SubmissionID
+#             ))
+
+#             db.session.add(Planetmetrics(
+#                 GreenhouseGasEmission=fake.random_number(digits=2),
+#                 WaterConsumption=fake.random_number(digits=2),
+#                 LandUse=fake.random_number(digits=2),
+#                 SubmissionID=sub.SubmissionID
+#             ))
+            
+#             db.session.add(Prosperitymetrics(
+#                 TotalTaxPaid=fake.random_number(digits=2),
+#                 AbsNumberOfNewEmps=fake.random_number(digits=2),
+#                 AbsNumberOfNewEmpTurnover=fake.random_number(digits=2),
+#                 EconomicContribution=fake.random_number(digits=2),
+#                 TotalRNDExpenses=fake.random_number(digits=2),
+#                 TotalCapitalExpenditures=fake.random_number(digits=2),
+#                 ShareBuyBacksAndDividendPayments=fake.random_number(digits=2),
+#                 SubmissionID=sub.SubmissionID
+#             ))
+            
+#             db.session.add(Governancemetrics(
+#                 AntiCorruptionTraining=fake.random_number(digits=2),
+#                 ConfirmedCorruptionIncidentPrev=fake.random_number(digits=2),
+#                 ConfirmedCorruptionIncidentCurrent=fake.random_number(digits=2),
+#                 SubmissionID=sub.SubmissionID
+#             ))
+
+#         db.session.commit()
+
 def generate_dummy_data():
     with app.app_context():
         users = User.query.all()
@@ -1268,11 +1020,11 @@ def generate_dummy_data():
                     FirstName=fake.first_name(),
                     LastName=fake.last_name(),
                     Date=fake.date_this_decade(),
-                    Year=fake.year(),  # Generate a year
+                    Year=fake.year(),
                     StartPeriod=fake.date_this_decade(),
                     EndPeriod=fake.date_this_decade(),
-                    Score=random.uniform(0, 100),  # Generate a random score between 0 and 100
-                    Status=random.choice([0, 1, 2]),  # Randomly choose a status
+                    Score=random.uniform(0, 100), 
+                    Status=random.choice([0, 1, 2]), 
                     UserID=user.UserID
                 )
                 db.session.add(submission)
@@ -1280,38 +1032,351 @@ def generate_dummy_data():
 
         db.session.commit()
 
-        # Add dummy metrics
+        # Add dummy metrics (using new models)
         for sub in submissions:
-            db.session.add(Peoplemetrics(
-                DiversityAndInclusion=fake.random_number(digits=2),
-                PayEquality=fake.random_number(digits=2),
-                WageLevel=fake.random_number(digits=2),
-                HealthAndSafetyLevel=fake.random_number(digits=2),
+            # Social Metrics
+            db.session.add(SocialMetrics(
+                CustomerComplaints=fake.random_int(min=0, max=100),
+                CustomerSatisfactionScore=fake.pyfloat(min_value=0, max_value=100),
+
+                # Human Capital Development
+                PermanentEmployeesMale=fake.random_int(min=0, max=1000),
+                PermanentEmployeesFemale=fake.random_int(min=0, max=1000),
+                TemporaryEmployees=fake.random_int(min=0, max=500),
+                FullTimeEmployeesMale=fake.random_int(min=0, max=1000),
+                FullTimeEmployeesFemale=fake.random_int(min=0, max=1000),
+                PartTimeEmployeesMale=fake.random_int(min=0, max=200),
+                PartTimeEmployeesFemale=fake.random_int(min=0, max=200),
+                EmployeeTurnoverRate=fake.pyfloat(min_value=0, max_value=100),
+                TrainingAndDevelopmentSpendPerEmployee=fake.pyfloat(min_value=0, max_value=10000),
+                LostTimeInjuryFrequencyRate=fake.pyfloat(min_value=0, max_value=10),
+                EmployeeEngagementScore=fake.pyfloat(min_value=0, max_value=100),
+                GenderPayGap=fake.word(),  # Assuming a categorical value (e.g., "No Gap", "Small Gap", etc.)
+
+                # Training, Bursaries & Learnerships
+                TotalTrainingSpend=fake.pyfloat(min_value=0, max_value=1000000),
+                TotalTrainingSpendBasicPayroll=fake.pyfloat(min_value=0, max_value=100),
+                TrainingSpendPerEmployee=fake.pyfloat(min_value=0, max_value=10000),
+                TrainingBeneficiaries=fake.random_int(min=0, max=1000),
+                AverageTrainingHours=fake.pyfloat(min_value=0, max_value=40),
+                TrainingSpendBlackEmployees=fake.pyfloat(min_value=0, max_value=1000000),
+                TrainingSpendBlackFemaleEmployees=fake.pyfloat(min_value=0, max_value=1000000),
+                TrainingSpendBlackFemaleEmployeesWithDisabilities=fake.pyfloat(min_value=0, max_value=1000000),
+                TrainingSpendFemaleEmployees=fake.pyfloat(min_value=0, max_value=1000000),
+                TrainingSpendFemaleEmployeesWithDisabilities=fake.pyfloat(min_value=0, max_value=1000000),
+                TotalInternalBursaries=fake.random_int(min=0, max=100),
+                ActualPaymentOnBursaries=fake.pyfloat(min_value=0, max_value=1000000),
+                LearnershipOfferedToUnemployedAndDisabled=fake.random_int(min=0, max=50),
+                LearnershipsAndInternships=fake.random_int(min=0, max=100),
+                LearnershipStudentsAdsorbedIntoEmployment=fake.random_int(min=0, max=50),
+                NumberEmployeesAttendedManagementLeadership=fake.random_int(min=0, max=200),
+
+                # Graduate Programme
+                TotalGraduateProgramIntake=fake.random_int(min=0, max=50),
+                GraduateProgramIntakeFemale=fake.random_int(min=0, max=50),
+                TotalGraduateProgramAbsorption=fake.random_int(min=0, max=50),
+                GraduateProgramAbsorptionRate=fake.pyfloat(min_value=0, max_value=100),
+
+                # Employee Profile & Movements
+                TotalNumberOfEmployeesBeginningYear=fake.random_int(min=1000, max=5000),
+                TotalNumberOfEmployeesEndOfYear=fake.random_int(min=1000, max=5000),
+                NewHiresPermanentEmployees=fake.random_int(min=0, max=200),
+                NewHiresPermanentEmployeesWith3MonthsProbation=fake.random_int(min=0, max=200),
+                TerminationsPermanentEmployees=fake.random_int(min=0, max=100),  # Added
+                Resignations=fake.random_int(min=0, max=100),  # Added
+                VoluntaryRetrenchments=fake.random_int(min=0, max=50),  # Added
+                InvoluntaryRetrenchments=fake.random_int(min=0, max=50),  # Added
+                Dismissals=fake.random_int(min=0, max=20),  # Added
+                NonTemporaryEmployees=fake.random_int(min=800, max=4500),  # Added
+                TotalEmployeeInternalTransfers=fake.random_int(min=0, max=100),  # Added
+                VacanciesFilledByInternalCandidates=fake.random_int(min=0, max=100),  # Added
+                InternalPromotionalSuccessRate=fake.pyfloat(min_value=0, max_value=100),  # Added (percentage)
+                TotalEmployeePromotions=fake.random_int(min=0, max=100),  # Added
+                NewHiresWomen=fake.random_int(min=0, max=100),
+
+                # Per Region
+                SouthAfricanEmployeesMale=fake.random_int(min=0, max=1000),
+                SouthAfricanEmployeesFemale=fake.random_int(min=0, max=1000),
+                InternationalEmployeesMale=fake.random_int(min=0, max=100),
+                InternationalEmployeesFemale=fake.random_int(min=0, max=100),
+
+                # Employee Equity Demographics
+                BlackFemaleEmployees=fake.random_int(min=0, max=1000),
+                ColouredEmployees=fake.random_int(min=0, max=500),
+                IndianEmployees=fake.random_int(min=0, max=500),
+                AsianEmployees=fake.random_int(min=0, max=200),
+                WhiteEmployees=fake.random_int(min=0, max=1000),
+                MaleEmployees=fake.random_int(min=0, max=2000),
+                FemaleEmployees=fake.random_int(min=0, max=2000),
+                DisabilityRepresentationNumberOfEmployees=fake.random_int(min=0, max=100),
+
+                # Employee Age
+                LessThan20YearsMale=fake.random_int(min=0, max=50),
+                LessThan20YearsFemale=fake.random_int(min=0, max=50),
+                Between20And29YearsMale=fake.random_int(min=0, max=500),
+                Between20And29YearsFemale=fake.random_int(min=0, max=500),
+                Between30And39YearsMale=fake.random_int(min=0, max=500),
+                Between30And39YearsFemale=fake.random_int(min=0, max=500),
+                Between40And49YearsMale=fake.random_int(min=0, max=300),
+                Between40And49YearsFemale=fake.random_int(min=0, max=300),
+                Between50And59YearsMale=fake.random_int(min=0, max=200),
+                Between50And59YearsFemale=fake.random_int(min=0, max=200),
+                Between60And69YearsMale=fake.random_int(min=0, max=100),
+                Between60And69YearsFemale=fake.random_int(min=0, max=100),
+                Over69YearsMale=fake.random_int(min=0, max=50),
+                Over69YearsFemale=fake.random_int(min=0, max=50),
+
+                # Employee Tenure
+                TenureLessThan1Year=fake.random_int(min=0, max=200),
+                Tenure1To3Years=fake.random_int(min=0, max=500),
+                Tenure4To6Years=fake.random_int(min=0, max=300),
+                Tenure7To9Years=fake.random_int(min=0, max=200),
+                Tenure10To20Years=fake.random_int(min=0, max=300),
+                Tenure21To30Years=fake.random_int(min=0, max=100),
+                Tenure31To40Years=fake.random_int(min=0, max=50),
+                TenureMoreThan40Years=fake.random_int(min=0, max=20),
+
+                # Top Management
+                TopManagementTotalNumber=fake.random_int(min=10, max=50),
+                TopManagementMaleEmployees=fake.random_int(min=0, max=30),
+                TopManagementFemaleEmployees=fake.random_int(min=0, max=20),
+                TopManagementBlackMaleEmployees=fake.random_int(min=0, max=20),
+                TopManagementBlackFemaleEmployees=fake.random_int(min=0, max=10),
+                TopManagementAfricanEmployees=fake.random_int(min=0, max=30),
+                TopManagementColouredEmployees=fake.random_int(min=0, max=10),
+                TopManagementIndianEmployees=fake.random_int(min=0, max=10),
+                TopManagementAsianEmployees=fake.random_int(min=0, max=5),
+                TopManagementWhiteEmployees=fake.random_int(min=0, max=15),
+                TopManagementDisabledEmployees=fake.random_int(min=0, max=5),
+
+                # Senior Management
+                SeniorManagementTotalNumber=fake.random_int(min=50, max=200),
+                SeniorManagementMaleEmployees=fake.random_int(min=0, max=100),
+                SeniorManagementFemaleEmployees=fake.random_int(min=0, max=100),
+                SeniorManagementBlackMaleEmployees=fake.random_int(min=0, max=80),
+                SeniorManagementBlackFemaleEmployees=fake.random_int(min=0, max=60),
+                SeniorManagementACIEmployees=fake.random_int(min=0, max=100), 
+                SeniorManagementColouredEmployees=fake.random_int(min=0, max=40),
+                SeniorManagementIndianEmployees=fake.random_int(min=0, max=40),
+                SeniorManagementAsianEmployees=fake.random_int(min=0, max=20),
+                SeniorManagementWhiteEmployees=fake.random_int(min=0, max=60),
+                SeniorManagementDisabledEmployees=fake.random_int(min=0, max=20),
+
+                # Middle Management
+                MiddleManagementTotalNumber=fake.random_int(min=200, max=500),
+                MiddleManagementMaleEmployees=fake.random_int(min=100, max=300),
+                MiddleManagementFemaleEmployees=fake.random_int(min=100, max=200),
+                MiddleManagementBlackEmployees=fake.random_int(min=150, max=400),
+                MiddleManagementACIEmployees=fake.random_int(min=50, max=100),
+                MiddleManagementColouredEmployees=fake.random_int(min=20, max=60),
+                MiddleManagementIndianEmployees=fake.random_int(min=20, max=60),
+                MiddleManagementAsianEmployees=fake.random_int(min=10, max=30),
+                MiddleManagementWhiteEmployees=fake.random_int(min=50, max=150),
+                MiddleManagementDisabledEmployees=fake.random_int(min=10, max=50),
+
+                # Junior Management
+                JuniorManagementTotalNumber=fake.random_int(min=500, max=1000),
+                JuniorManagementMaleEmployees=fake.random_int(min=200, max=500),
+                JuniorManagementFemaleEmployees=fake.random_int(min=300, max=500),
+                JuniorManagementBlackMaleEmployees=fake.random_int(min=150, max=400),
+                JuniorManagementBlackFemaleEmployees=fake.random_int(min=200, max=400),
+                JuniorManagementACIEmployees=fake.random_int(min=100, max=200),
+                JuniorManagementColouredEmployees=fake.random_int(min=50, max=100),
+                JuniorManagementIndianEmployees=fake.random_int(min=50, max=100),
+                JuniorManagementAsianEmployees=fake.random_int(min=25, max=50),
+                JuniorManagementWhiteEmployees=fake.random_int(min=100, max=200),
+                JuniorManagementDisabledEmployees=fake.random_int(min=25, max=100),
+
+                # Semi-Skilled
+                SemiSkilledTotalNumber=fake.random_int(min=300, max=800),
+                SemiSkilledFemaleEmployees=fake.random_int(min=100, max=400),
+                SemiSkilledBlackMaleEmployees=fake.random_int(min=100, max=300),
+                SemiSkilledBlackFemaleEmployees=fake.random_int(min=100, max=300),
+                SemiSkilledACIEmployees=fake.random_int(min=50, max=150),
+                SemiSkilledColouredEmployees=fake.random_int(min=30, max=80),
+                SemiSkilledIndianEmployees=fake.random_int(min=30, max=80),
+                SemiSkilledAsianEmployees=fake.random_int(min=15, max=40),
+                SemiSkilledWhiteEmployees=fake.random_int(min=50, max=150),
+                SemiSkilledDisabledEmployees=fake.random_int(min=15, max=40),
+
+                # Unskilled
+                UnskilledTotalNumber=fake.random_int(min=100, max=300),
+                UnskilledFemaleEmployees=fake.random_int(min=50, max=150),
+                UnskilledBlackMaleEmployees=fake.random_int(min=30, max=100),
+                UnskilledBlackFemaleEmployees=fake.random_int(min=40, max=100),
+                UnskilledACIEmployees=fake.random_int(min=20, max=60),
+                UnskilledColouredEmployees=fake.random_int(min=10, max=30),
+                UnskilledIndianEmployees=fake.random_int(min=10, max=30),
+                UnskilledAsianEmployees=fake.random_int(min=5, max=15),
+                UnskilledWhiteEmployees=fake.random_int(min=20, max=60),
+                UnskilledDisabledEmployees=fake.random_int(min=5, max=15),
+
+                #Per Disability Type
+                SensoryDisability=fake.random_int(min=0, max=20),
+                PhysicalDisability=fake.random_int(min=0, max=20),
+                MentalDisability=fake.random_int(min=0, max=20),
+                MultipleDisabilities=fake.random_int(min=0, max=10),
+
+                # Financial Inclusion
+                MortgageLoansGranted=fake.random_int(min=0, max=1000),
+                MortgageLoansValueTotal=fake.pyfloat(min_value=0, max_value=100000000),  # Example: in Rands
+                MortgageLoansAffordableHousingTotal=fake.random_int(min=0, max=500),
+                MortgageLoansAffordableHousingValueTotal=fake.pyfloat(min_value=0, max_value=50000000),  # Example: in Rands
+
+                # Physical Footprint
+                Outlets=fake.random_int(min=10, max=100),
+                ATMs=fake.random_int(min=50, max=500),
+                POSDevices=fake.random_int(min=100, max=1000),
+                TotalClients=fake.random_int(min=10000, max=1000000),
+                DigitallyActiveClients=fake.random_int(min=5000, max=500000),
+
+                # Suppliers
+                TotalNumberSuppliers=fake.random_int(min=100, max=1000),
+                TotalProcurementSpend=fake.pyfloat(min_value=1000000, max_value=100000000),  # Example: in Rands
+                TotalProcurementSpendExemptMicroenterprises=fake.pyfloat(min_value=0, max_value=5000000),
+                TotalProcurementSpendQualifyingSmallEnterprises=fake.pyfloat(min_value=0, max_value=10000000),
+                TotalProcurementSpend51PercentBlackOwned=fake.pyfloat(min_value=0, max_value=50000000),
+                TotalProcurementSpend30PercentBlackOwned=fake.pyfloat(min_value=0, max_value=20000000),
+                LocalProcurementSpend=fake.pyfloat(min_value=0, max_value=80000000),
+
+                # Regulators
+                TotalEnvironmentalIncidents=fake.random_int(min=0, max=10),
+                TotalEnvironmentalFines=fake.pyfloat(min_value=0, max_value=1000000),
+
                 SubmissionID=sub.SubmissionID
             ))
 
-            db.session.add(Planetmetrics(
-                GreenhouseGasEmission=fake.random_number(digits=2),
-                WaterConsumption=fake.random_number(digits=2),
-                LandUse=fake.random_number(digits=2),
+            # Environmental Metrics
+            db.session.add(EnvironmentalMetrics(
+                TotalEnergyUse=fake.pyfloat(min_value=0, max_value=1000000),
+                TotalRenewableEnergy=fake.pyfloat(min_value=0, max_value=1000000),
+                TotalNonRenewableEnergy=fake.pyfloat(min_value=0, max_value=1000000),
+                NonRenewableEnergySources=fake.sentence(nb_words=6),  # Example: comma-separated list of sources
+
+                # Greenhouse gas emissions
+                CarbonEmissions=fake.pyfloat(min_value=0, max_value=1000000),
+                CarEmissions=fake.pyfloat(min_value=0, max_value=500000),
+                RefrigerantGasEmissions=fake.pyfloat(min_value=0, max_value=100000),
+                DieselGeneratorsEmissions=fake.pyfloat(min_value=0, max_value=50000),
+                ElectricityEmissions=fake.pyfloat(min_value=0, max_value=800000),
+                ATMEmissions=fake.pyfloat(min_value=0, max_value=100000),
+                TotalIndirectEmissions=fake.pyfloat(min_value=0, max_value=500000),
+                FlightEmissions=fake.pyfloat(min_value=0, max_value=200000),
+                CashInTransitEmissions=fake.pyfloat(min_value=0, max_value=100000),
+                CarRentalsEmissions=fake.pyfloat(min_value=0, max_value=50000),
+                CloudComputingEmissions=fake.pyfloat(min_value=0, max_value=100000),
+                CourierEmissions=fake.pyfloat(min_value=0, max_value=50000),
+                PaperUsageEmissions=fake.pyfloat(min_value=0, max_value=20000),
+                WasteDisposalEmissions=fake.pyfloat(min_value=0, max_value=50000),
+                EmployeeCommutingEmissions=fake.pyfloat(min_value=0, max_value=200000),
+                ElectricityTransmissionLossesEmissions=fake.pyfloat(min_value=0, max_value=100000),
+                CarbonEmissionsPerMeterSquared=fake.pyfloat(min_value=0, max_value=100),
+
+                # Waste Management
+                TotalWaste=fake.pyfloat(min_value=0, max_value=100000),  # Example: in kg
+                RecycledWaste=fake.pyfloat(min_value=0, max_value=100000),
+                WasteToLandfill=fake.pyfloat(min_value=0, max_value=100000),
                 SubmissionID=sub.SubmissionID
             ))
-            
-            db.session.add(Prosperitymetrics(
-                TotalTaxPaid=fake.random_number(digits=2),
-                AbsNumberOfNewEmps=fake.random_number(digits=2),
-                AbsNumberOfNewEmpTurnover=fake.random_number(digits=2),
-                EconomicContribution=fake.random_number(digits=2),
-                TotalRNDExpenses=fake.random_number(digits=2),
-                TotalCapitalExpenditures=fake.random_number(digits=2),
-                ShareBuyBacksAndDividendPayments=fake.random_number(digits=2),
-                SubmissionID=sub.SubmissionID
-            ))
-            
-            db.session.add(Governancemetrics(
-                AntiCorruptionTraining=fake.random_number(digits=2),
-                ConfirmedCorruptionIncidentPrev=fake.random_number(digits=2),
-                ConfirmedCorruptionIncidentCurrent=fake.random_number(digits=2),
+
+            # Governance Metrics
+            db.session.add(GovernanceMetrics(
+                NumberOfBoardMembers=fake.random_int(min=5, max=20),
+                IndependentNonExecutiveDirectors=fake.random_int(min=2, max=10),
+                ExecutiveDirectors=fake.random_int(min=1, max=5),
+                NonExecutiveDirectors=fake.random_int(min=3, max=15),
+                IndependentBoardChairman=fake.random_element(elements=('Yes', 'No')),
+                BlackACIExecutiveBoardMembers=fake.random_int(min=0, max=5),
+                BlackACIWomenExecutiveBoardMembers=fake.random_int(min=0, max=3),
+                BlackACIIndependentNonExecutiveBoardMembers=fake.random_int(min=0, max=8),
+
+                TotalNumberOfBoardMeetings=fake.random_int(min=4, max=12),  # Assuming number of meetings per year
+                BoardTrainingHours=fake.pyfloat(min_value=0, max_value=40),  # Assuming hours per year
+
+                WhiteMales=fake.random_int(min=0, max=1000),
+                WhiteFemales=fake.random_int(min=0, max=1000),
+                ACIFemales=fake.random_int(min=0, max=1000),
+                ACIMales=fake.random_int(min=0, max=1000),
+                NonSABoardMembers=fake.random_int(min=0, max=5),
+
+                BoardMembersLessThan1Year=fake.random_int(min=0, max=3),
+                BoardMembers1To3Years=fake.random_int(min=0, max=5),
+                BoardMembers4To6Years=fake.random_int(min=0, max=5),
+                BoardMembers7To9Years=fake.random_int(min=0, max=3),
+                BoardMembersMoreThan9Years=fake.random_int(min=0, max=2),
+                BoardMembers40To49YearsAge=fake.random_int(min=0, max=5),
+                BoardMembers50To59YearsAge=fake.random_int(min=0, max=8),
+                BoardMembers60To69YearsAge=fake.random_int(min=0, max=5),
+                BoardMembers70Plus=fake.random_int(min=0, max=2),
+
+                TotalNumberOfExcoMembers=fake.random_int(min=5, max=20),
+                ExecutiveDirectorsExco=fake.random_int(min=1, max=5),
+                PrescribedOfficers=fake.random_int(min=1, max=8),
+                ExOfficioMembers=fake.random_int(min=0, max=3),
+                WomenExcoMembers=fake.random_int(min=0, max=10),  # Assuming a count
+                ACIExcoMembers=fake.random_int(min=0, max=10),  # Assuming a count
+
+                ExcoMembers0To3Years=fake.random_int(min=0, max=8),
+                ExcoMembers4To6Years=fake.random_int(min=0, max=5),
+                ExcoMembers7To9Years=fake.random_int(min=0, max=3),
+
+                ExcoMembers0To10Years=fake.random_int(min=0, max=10),
+                ExcoMembers11To20Years=fake.random_int(min=0, max=5),
+                ExcoMembersMoreThan20Years=fake.random_int(min=0, max=2),
+
+                ControllingShareholder=fake.random_element(elements=('Yes', 'No')),
+                MultipleShareholderRights=fake.random_element(elements=('Yes', 'No')),
+
+                BeneficialSharesDirectOwnershipCEO=fake.random_int(min=0, max=100000),
+                BeneficialSharesIndirectOwnershipCEO=fake.random_int(min=0, max=50000),
+                TotalSharesOwnedCEO=fake.random_int(min=0, max=150000),
+
+                BeneficialSharesDirectOwnershipCFO=fake.random_int(min=0, max=50000),
+                BeneficialSharesIndirectOwnershipCFO=fake.random_int(min=0, max=25000),
+                TotalSharesOwnedCFO=fake.random_int(min=0, max=75000),
+
+                BeneficialSharesDirectOwnershipCOO=fake.random_int(min=0, max=50000),
+                BeneficialSharesIndirectOwnershipCOO=fake.random_int(min=0, max=25000),
+                TotalSharesOwnedCOO=fake.random_int(min=0, max=75000),
+
+                Auditors=fake.company(),  # You might want to use a list of actual auditing firms
+                AuditorTenure=fake.random_int(min=1, max=10),  # Years
+                AuditFees=fake.pyfloat(min_value=100000, max_value=10000000),  # Example: in Rands
+
+                ExecutiveRemunerationLinkedToESG=fake.boolean(),
+
+                CEOGuaranteedPackage=fake.pyfloat(min_value=1000000, max_value=10000000),
+                CEOShortTermIncentive=fake.pyfloat(min_value=0, max_value=5000000),
+                CEOLongTermIncentive=fake.pyfloat(min_value=0, max_value=5000000),
+                CEOTotalRemuneration=fake.pyfloat(min_value=1000000, max_value=15000000),
+                CEOSharePriceAsMultipleOfGuaranteedPackage=fake.pyfloat(min_value=0.5, max_value=3),
+
+                CFOGuaranteedPackage=fake.pyfloat(min_value=500000, max_value=5000000),
+                CFOShortTermIncentive=fake.pyfloat(min_value=0, max_value=2500000),
+                CFOLongTermIncentive=fake.pyfloat(min_value=0, max_value=2500000),
+                CFOTotalRemuneration=fake.pyfloat(min_value=500000, max_value=7500000),
+
+                COOGuaranteedPackage=fake.pyfloat(min_value=500000, max_value=5000000),
+                COOShortTermIncentive=fake.pyfloat(min_value=0, max_value=2500000),
+                COOLongTermIncentive=fake.pyfloat(min_value=0, max_value=2500000),
+                COOTotalRemuneration=fake.pyfloat(min_value=500000, max_value=7500000),
+
+                EmployeesCompletedEthicsTraining=fake.random_int(min=500, max=5000),
+                ContractorsCompletedEthicsTraining=fake.random_int(min=100, max=1000),
+                SubsidiariesCompletedEthicsTraining=fake.random_int(min=10, max=50),
+                ReportedCases=fake.random_int(min=0, max=50),
+                CasesStillUnderInvestigation=fake.random_int(min=0, max=20),
+                SubstantiatedCases=fake.random_int(min=0, max=30),
+                UnsubstantiatedCases=fake.random_int(min=0, max=20),
+                DisciplinaryCasesReported=fake.random_int(min=0, max=30),
+                DisciplinaryCasesConcluded=fake.random_int(min=0, max=25),
+                EthicalDisciplinaryCasesConcluded=fake.random_int(min=0, max=20),
+                OngoingDisciplinaryCases=fake.random_int(min=0, max=10),
+
+                SystemAvailability=fake.pyfloat(min_value=90, max_value=100),  # Assuming percentage
+                PrivacyRelatedIncidents=fake.random_int(min=0, max=10),
+                PrivacyRelatedIncidentsReportedToRegulator=fake.random_int(min=0, max=5),
+
                 SubmissionID=sub.SubmissionID
             ))
 
