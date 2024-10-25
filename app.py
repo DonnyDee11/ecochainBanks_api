@@ -24,9 +24,13 @@ import random
 from datetime import datetime
 import requests
 from modelsBanks import db, User, Transaction, Submission, SocialMetrics, EnvironmentalMetrics, GovernanceMetrics
+from werkzeug.security import generate_password_hash
 
 ecochainPK = "4pGX12svaEoBYqBX7WfriGIhUB3VjkeUofm6IM3Y+6b69JOah+47V6+PX/KeLfpDMv683zGwQ2R83pkdj7FwCA=="
 ecochainAddress = "7L2JHGUH5Y5VPL4PL7ZJ4LP2IMZP5PG7GGYEGZD432MR3D5ROAEDKWFGRU"
+ADMIN_EMAIL = 'admin@example.com'  # Replace with the actual admin email
+ADMIN_PASSWORD = 'adminpassword'  # Replace with the actual admin password
+ADMIN_PASSWORD_HASHED = generate_password_hash('adminpassword')
 load_dotenv() 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ecochain.db'
@@ -67,6 +71,13 @@ def login():
         if user and check_password_hash(user.Password, password):
             access_token = create_access_token(identity=user.UserID)
             print("Access token created: ", access_token)
+            return jsonify(access_token=access_token, success=True), 200
+
+        # Check if the provided credentials match the admin credentials
+        elif email == ADMIN_EMAIL and check_password_hash(ADMIN_PASSWORD_HASHED, password):
+            # Create an access token with the admin role
+            access_token = create_access_token(identity=email, additional_claims={"role": "admin"})
+            print("Admin access token created: ", access_token)
             return jsonify(access_token=access_token, success=True), 200
         
         return jsonify({
