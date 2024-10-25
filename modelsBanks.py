@@ -15,6 +15,7 @@ class User(db.Model, UserMixin):
     Industry = db.Column(db.String(100))
     Size = db.Column(db.String(100))
     Description = db.Column(db.String())
+    Role = db.Column(db.String(50), nullable=False, default='user')  # Add Role column
     
 
     def get_id(self):
