@@ -73,6 +73,27 @@ def login():
             "success": False, 
             "message": "Invalid email or password"
             }), 401
+    
+
+@app.route("/admin/submissions", methods=["GET"])
+@jwt_required()
+def admin_submissions():
+    # Check if the logged-in user is an admin
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+
+    if user.Role != 'admin':  # Or use another value if you've defined roles differently
+        return jsonify({"msg": "Unauthorized"}), 403  # Forbidden
+
+    # Fetch all submissions from the database
+    submissions = Submission.query.all()
+
+    # Convert submissions to a list of dictionaries
+    submission_list = [submission.as_dict() for submission in submissions]
+
+    return jsonify(submission_list), 200
+
+
 
 @app.route("/register", methods=["POST"])
 def register():
