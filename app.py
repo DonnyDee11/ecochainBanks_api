@@ -69,9 +69,11 @@ def login():
         user = User.query.filter_by(Email=email).first()
 
         if user and check_password_hash(user.Password, password):
-            access_token = create_access_token(identity=user.UserID)
+            # access_token = create_access_token(identity=user.UserID)
+            access_token = create_access_token(identity=user.UserID, additional_claims={"role": user.Role})
             print("Access token created: ", access_token)
-            return jsonify(access_token=access_token, success=True), 200
+            return jsonify(access_token=access_token, success=True, role=user.Role), 200
+            # return jsonify(access_token=access_token, success=True), 200
 
         # Check if the provided credentials match the admin credentials
         elif email == ADMIN_EMAIL and check_password_hash(ADMIN_PASSWORD_HASHED, password):
@@ -972,77 +974,30 @@ def get_success_page(submission_id):
                 "error": "Transaction not found for this submission"
             }), 404
 
-        # return jsonify({
-        #     "success": True,
-        #     "id": current_user.UserID,
-        #     "transaction_id": transaction.TransactionID,
-        #     "nft_id": transaction.NFTAssetID
-        # }), 200
-
-# def generate_dummy_data():
-#     with app.app_context():
-#         users = User.query.all()
-
-#         # Add dummy submissions
-#         submissions = []
-#         for user in users:
-#             for _ in range(3):
-#                 submission = Submission(
-#                     FirstName=fake.first_name(),
-#                     LastName=fake.last_name(),
-#                     Date=fake.date_this_decade(),
-#                     Year=fake.year(),  # Generate a year
-#                     StartPeriod=fake.date_this_decade(),
-#                     EndPeriod=fake.date_this_decade(),
-#                     Score=random.uniform(0, 100),  # Generate a random score between 0 and 100
-#                     Status=random.choice([0, 1, 2]),  # Randomly choose a status
-#                     UserID=user.UserID
-#                 )
-#                 db.session.add(submission)
-#                 submissions.append(submission)
-
-#         db.session.commit()
-
-#         # Add dummy metrics
-#         for sub in submissions:
-#             db.session.add(Peoplemetrics(
-#                 DiversityAndInclusion=fake.random_number(digits=2),
-#                 PayEquality=fake.random_number(digits=2),
-#                 WageLevel=fake.random_number(digits=2),
-#                 HealthAndSafetyLevel=fake.random_number(digits=2),
-#                 SubmissionID=sub.SubmissionID
-#             ))
-
-#             db.session.add(Planetmetrics(
-#                 GreenhouseGasEmission=fake.random_number(digits=2),
-#                 WaterConsumption=fake.random_number(digits=2),
-#                 LandUse=fake.random_number(digits=2),
-#                 SubmissionID=sub.SubmissionID
-#             ))
-            
-#             db.session.add(Prosperitymetrics(
-#                 TotalTaxPaid=fake.random_number(digits=2),
-#                 AbsNumberOfNewEmps=fake.random_number(digits=2),
-#                 AbsNumberOfNewEmpTurnover=fake.random_number(digits=2),
-#                 EconomicContribution=fake.random_number(digits=2),
-#                 TotalRNDExpenses=fake.random_number(digits=2),
-#                 TotalCapitalExpenditures=fake.random_number(digits=2),
-#                 ShareBuyBacksAndDividendPayments=fake.random_number(digits=2),
-#                 SubmissionID=sub.SubmissionID
-#             ))
-            
-#             db.session.add(Governancemetrics(
-#                 AntiCorruptionTraining=fake.random_number(digits=2),
-#                 ConfirmedCorruptionIncidentPrev=fake.random_number(digits=2),
-#                 ConfirmedCorruptionIncidentCurrent=fake.random_number(digits=2),
-#                 SubmissionID=sub.SubmissionID
-#             ))
-
-#         db.session.commit()
 
 def generate_dummy_data():
     with app.app_context():
-        users = User.query.all()
+        
+        admin_user = User(
+            Email='admin@example.com',  
+            Password=generate_password_hash('adminpassword'),  
+            Name='Admin User',  
+            Role='admin'
+        )
+        db.session.add(admin_user)
+
+        # Create other regular users 
+        users = []  # Initialize an empty list for regular users
+        for _ in range(5): 
+            user = User(
+                Email=fake.email(),
+                Password=generate_password_hash('password'),
+                Name=fake.name()
+            )
+            db.session.add(user)
+            users.append(user)  # Add the new user to the list
+
+        db.session.commit()  # Commit the user creation
 
         # Add dummy submissions
         submissions = []
@@ -1243,11 +1198,6 @@ def generate_dummy_data():
                 UnskilledWhiteEmployees=fake.random_int(min=20, max=60),
                 UnskilledDisabledEmployees=fake.random_int(min=5, max=15),
 
-                #Per Disability Type
-                SensoryDisability=fake.random_int(min=0, max=20),
-                PhysicalDisability=fake.random_int(min=0, max=20),
-                MentalDisability=fake.random_int(min=0, max=20),
-                MultipleDisabilities=fake.random_int(min=0, max=10),
 
                 # Financial Inclusion
                 MortgageLoansGranted=fake.random_int(min=0, max=1000),
