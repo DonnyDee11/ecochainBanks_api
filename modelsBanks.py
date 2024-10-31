@@ -1,8 +1,14 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime
+import enum
 
 db = SQLAlchemy()
+
+class UserRole(enum.Enum):
+    user = 'user'
+    admin = 'admin'
+    auditor = 'auditor'
 
 class User(db.Model, UserMixin):
     UserID = db.Column(db.Integer, primary_key=True)
@@ -15,7 +21,7 @@ class User(db.Model, UserMixin):
     Industry = db.Column(db.String(100))
     Size = db.Column(db.String(100))
     Description = db.Column(db.String())
-    Role = db.Column(db.String(50), nullable=False, default='user')  # Add Role column
+    Role = db.Column(db.Enum(UserRole), nullable=False, default=UserRole.user)  # Use the Enum type
     
 
     def get_id(self):
@@ -30,7 +36,7 @@ class Submission(db.Model):
     EndPeriod = db.Column(db.Date, nullable=True,default=datetime.utcnow)
     Year = db.Column(db.Integer)
     Score = db.Column(db.Double)
-    Status = db.Column(db.Integer) # 0: in progress, 1: complete, 2: rejected
+    Status = db.Column(db.Integer) # 0: in progress, 1: Pending, 2: Approved, 3: Rejected, 4: Complete
     UserID = db.Column(db.Integer, db.ForeignKey('user.UserID'))
 
     def as_dict(self):

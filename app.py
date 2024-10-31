@@ -23,7 +23,7 @@ import os
 import random
 from datetime import datetime
 import requests
-from modelsBanks import db, User, Transaction, Submission, SocialMetrics, EnvironmentalMetrics, GovernanceMetrics
+from modelsBanks import db, User, UserRole, Transaction, Submission, SocialMetrics, EnvironmentalMetrics, GovernanceMetrics
 from werkzeug.security import generate_password_hash
 
 ecochainPK = "4pGX12svaEoBYqBX7WfriGIhUB3VjkeUofm6IM3Y+6b69JOah+47V6+PX/KeLfpDMv683zGwQ2R83pkdj7FwCA=="
@@ -69,18 +69,16 @@ def login():
         user = User.query.filter_by(Email=email).first()
 
         if user and check_password_hash(user.Password, password):
-            # access_token = create_access_token(identity=user.UserID)
-            access_token = create_access_token(identity=user.UserID, additional_claims={"role": user.Role})
+            access_token = create_access_token(identity=user.UserID, additional_claims={"role": user.Role.value})  # Use enum value
             print("Access token created: ", access_token)
-            return jsonify(access_token=access_token, success=True, role=user.Role), 200
-            # return jsonify(access_token=access_token, success=True), 200
+            return jsonify(access_token=access_token, success=True, role=user.Role.value), 200  # Include role in response
 
         # Check if the provided credentials match the admin credentials
         elif email == ADMIN_EMAIL and check_password_hash(ADMIN_PASSWORD_HASHED, password):
             # Create an access token with the admin role
-            access_token = create_access_token(identity=email, additional_claims={"role": "admin"})
+            access_token = create_access_token(identity=email, additional_claims={"role": UserRole.admin.value})  # Use enum value
             print("Admin access token created: ", access_token)
-            return jsonify(access_token=access_token, success=True), 200
+            return jsonify(access_token=access_token, success=True, role=UserRole.admin.value), 200  # Include role in response
         
         return jsonify({
             "success": False, 
@@ -95,7 +93,7 @@ def admin_submissions():
     current_user_id = get_jwt_identity()
     user = User.query.get(current_user_id)
 
-    if user.Role != 'admin':  # Or use another value if you've defined roles differently
+    if user.Role.value != 'admin':  # Or use another value if you've defined roles differently
         return jsonify({"msg": "Unauthorized"}), 403  # Forbidden
 
     # Fetch all submissions from the database
@@ -107,6 +105,44 @@ def admin_submissions():
     return jsonify(submission_list), 200
 
 
+@app.route("/auditor/submissions", methods=["GET", "POST"])
+@jwt_required()
+def auditor_submissions():
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+
+    if user.Role.value != 'auditor':
+        return jsonify({"msg": "Unauthorized"}), 403
+
+    if request.method == 'GET':
+        # Fetch pending submissions (assuming Status=1 means pending)
+        submissions = Submission.query.filter_by(Status=1).all()  
+        submission_list = [submission.as_dict() for submission in submissions]
+        return jsonify(submission_list), 200
+
+    elif request.method == 'POST':
+        data = request.get_json()
+        submission_id = data.get('submission_id')
+        new_status = data.get('status')  # 'approved' or 'rejected'
+
+        if not submission_id or not new_status:
+            return jsonify({"msg": "Missing submission_id or status"}), 400
+
+        submission = Submission.query.get(submission_id)
+        if not submission:
+            return jsonify({"msg": "Submission not found"}), 404
+
+        # Update submission status (you might want to add more validation or checks here)
+        if new_status.lower() == 'approved':
+            submission.Status = 2  # Or another value representing 'approved'
+        elif new_status.lower() == 'rejected':
+            submission.Status = 3  # Or another value representing 'rejected'
+        else:
+            return jsonify({"msg": "Invalid status value"}), 400
+
+        db.session.commit()
+        return jsonify({"msg": "Submission status updated successfully"}), 200
+
 
 @app.route("/register", methods=["POST"])
 def register():
@@ -114,6 +150,12 @@ def register():
         email = request.json.get("email")
         password = request.json.get("password")
         name = request.json.get("name")
+        role = request.json.get('role')  # Get the selected role from the frontend
+
+        # Validate the role (ensure it's one of the allowed roles)
+        if role not in [role.value for role in UserRole]:
+            return jsonify({"success": False, "message": "Invalid role"}), 400
+
 
         # Check if the email is already in use
         existing_user = User.query.filter_by(Email=email).first()
@@ -135,6 +177,7 @@ def register():
         new_user = User(Email=email, 
                         Password=hashed_password, 
                         Name = name,
+                        Role=UserRole(role),  # Assign the selected role
                         AlgorandPrivateKey = private_key,
                         AlgorandAddress = address
                         )
@@ -357,178 +400,6 @@ def input_governance_metrics(submission_id):
             "message": str(e)
         }), 500
 
-
-# @app.route("/input_peoplemetrics/<submission_id>", methods=["POST"])
-# @jwt_required()
-# def input_peoplemetrics(submission_id):
-   
-#     # verify that subimissionid is valid 
-#     print(submission_id)
-#     data = request.get_json()
-#     diversity_inclusion = nullify_empty_string(data.get("DiversityAndInclusion"))
-#     pay_equality = nullify_empty_string(data.get("PayEquality"))
-#     wage_level = nullify_empty_string(data.get("WageLevel"))
-#     health_safety_level = nullify_empty_string(data.get("HealthAndSafetyLevel"))
-    
-#     existing_metric = Peoplemetrics.query.filter_by(SubmissionID=submission_id).first()
-    
-#     if existing_metric:
-#         existing_metric.DiversityAndInclusion = diversity_inclusion
-#         existing_metric.PayEquality = pay_equality
-#         existing_metric.WageLevel = wage_level
-#         existing_metric.HealthAndSafetyLevel = health_safety_level
-#     else:
-#         new_metric = Peoplemetrics(
-#             DiversityAndInclusion=diversity_inclusion,
-#             PayEquality=pay_equality,
-#             WageLevel=wage_level,
-#             HealthAndSafetyLevel=health_safety_level,
-#             SubmissionID=submission_id
-#         )
-#         db.session.add(new_metric)
-    
-#     try:
-#         db.session.commit()
-#         return jsonify({
-#             "success": True, 
-#             "message": "Metrics added successfully"
-#         }), 201
-#     except Exception as e:
-#         db.session.rollback()
-#         return jsonify({
-#             "success": False,
-#             "message": str(e)
-#         }), 500
-    
-# @app.route("/input_planetmetrics/<submission_id>", methods=["POST"])
-# @jwt_required()
-# def input_planetmetrics(submission_id):
-#     data = request.get_json()
-#     print(data)
-
-#     greenhouse_gas_emission = nullify_empty_string(data.get("GreenhouseGasEmission"))
-#     water_consumption = nullify_empty_string(data.get("WaterConsumption"))
-#     land_use = nullify_empty_string(data.get("LandUse"))
-
-#     existing_metric = Planetmetrics.query.filter_by(SubmissionID=submission_id).first()
-
-#     if existing_metric:
-#         existing_metric.GreenhouseGasEmission = greenhouse_gas_emission
-#         existing_metric.WaterConsumption = water_consumption
-#         existing_metric.LandUse = land_use
-#     else:
-#         new_metric = Planetmetrics(
-#             GreenhouseGasEmission=greenhouse_gas_emission,
-#             WaterConsumption=water_consumption,
-#             LandUse=land_use,
-#             SubmissionID=submission_id
-#         )
-#         db.session.add(new_metric)
-
-#     try:
-#         db.session.commit()
-#         return jsonify({
-#             "success": True, 
-#             "message": "Planet metrics added successfully"
-#         }), 201
-#     except Exception as e:
-#         db.session.rollback()
-#         return jsonify({
-#             "success": False,
-#             "message": str(e)
-#         }), 500
-    
-# @app.route("/input_prosperitymetrics/<submission_id>", methods=["POST"])
-# @jwt_required()
-# def input_prosperitymetrics(submission_id):
-  
-#     data = request.get_json()
-#     print(data)
-#     total_tax_paid = nullify_empty_string(data.get("TotalTaxPaid"))
-#     abs_number_of_new_emps = nullify_empty_string(data.get("AbsNumberOfNewEmps"))
-#     abs_number_of_new_emp_turnover = nullify_empty_string(data.get("AbsNumberOfNewEmpTurnover"))
-#     economic_contribution = nullify_empty_string(data.get("EconomicContribution"))
-#     total_rnd_expenses = nullify_empty_string(data.get("TotalRNDExpenses"))
-#     total_capital_expenditures = nullify_empty_string(data.get("TotalCapitalExpenditures"))
-#     share_buybacks_and_dividend_payments = nullify_empty_string(data.get("ShareBuyBacksAndDividendPayments"))
-
-#     # Check if an entry with the submission_id already exists
-#     existing_metric = Prosperitymetrics.query.filter_by(SubmissionID=submission_id).first()
-
-#     if existing_metric:
-#         # Update the existing entry
-#         existing_metric.TotalTaxPaid = total_tax_paid
-#         existing_metric.AbsNumberOfNewEmps = abs_number_of_new_emps
-#         existing_metric.AbsNumberOfNewEmpTurnover = abs_number_of_new_emp_turnover
-#         existing_metric.EconomicContribution = economic_contribution
-#         existing_metric.TotalRNDExpenses = total_rnd_expenses
-#         existing_metric.TotalCapitalExpenditures = total_capital_expenditures
-#         existing_metric.ShareBuyBacksAndDividendPayments = share_buybacks_and_dividend_payments
-#     else:
-#         # Create a new entry
-#         new_metric = Prosperitymetrics(
-#             TotalTaxPaid=total_tax_paid,
-#             AbsNumberOfNewEmps=abs_number_of_new_emps,
-#             AbsNumberOfNewEmpTurnover=abs_number_of_new_emp_turnover,
-#             EconomicContribution=economic_contribution,
-#             TotalRNDExpenses=total_rnd_expenses,
-#             TotalCapitalExpenditures=total_capital_expenditures,
-#             ShareBuyBacksAndDividendPayments=share_buybacks_and_dividend_payments,
-#             SubmissionID=submission_id
-#         )
-#         db.session.add(new_metric)
-        
-#     try:
-#         db.session.commit()
-#         return jsonify({
-#             "success": True, 
-#             "message": "Prosperity metrics added successfully"
-#         }), 201
-#     except Exception as e:
-#         db.session.rollback()
-#         return jsonify({
-#             "success": False,
-#             "message": str(e)
-#         }), 500
-
-# @app.route("/input_governancemetrics/<submission_id>", methods=["POST"])
-# @jwt_required()
-# def input_governancemetrics(submission_id):
-
-#     data = request.get_json()
-#     print(data)
-#     anti_corruption_training = nullify_empty_string(data.get("AntiCorruptionTraining"))
-#     confirmed_corruption_incident_prev = nullify_empty_string(data.get("ConfirmedCorruptionIncidentPrev"))
-#     confirmed_corruption_incident_current = nullify_empty_string(data.get("ConfirmedCorruptionIncidentCurrent"))
-
-#     existing_metric = Governancemetrics.query.filter_by(SubmissionID=submission_id).first()
-
-#     if existing_metric:
-#         existing_metric.AntiCorruptionTraining = anti_corruption_training
-#         existing_metric.ConfirmedCorruptionIncidentPrev = confirmed_corruption_incident_prev
-#         existing_metric.ConfirmedCorruptionIncidentCurrent = confirmed_corruption_incident_current
-#     else:
-#         new_metric = Governancemetrics(
-#             AntiCorruptionTraining=anti_corruption_training,
-#             ConfirmedCorruptionIncidentPrev=confirmed_corruption_incident_prev,
-#             ConfirmedCorruptionIncidentCurrent=confirmed_corruption_incident_current,
-#             SubmissionID=submission_id
-#         )
-#         db.session.add(new_metric)
-
-
-#     try:
-#         db.session.commit()
-#         return jsonify({
-#             "success": True, 
-#             "message": "Governance metrics added successfully"
-#         }), 201
-#     except Exception as e:
-#         db.session.rollback()
-#         return jsonify({
-#             "success": False,
-#             "message": str(e)
-#         }), 500
 
 @app.route("/trans/<submission_id>", methods=["POST"])
 @jwt_required()
@@ -982,7 +853,7 @@ def generate_dummy_data():
             Email='admin@example.com',  
             Password=generate_password_hash('adminpassword'),  
             Name='Admin User',  
-            Role='admin'
+            Role=UserRole.admin
         )
         db.session.add(admin_user)
 
@@ -1016,7 +887,7 @@ def generate_dummy_data():
                 )
                 db.session.add(submission)
                 submissions.append(submission)
-
+ 
         db.session.commit()
 
         # Add dummy metrics (using new models)
