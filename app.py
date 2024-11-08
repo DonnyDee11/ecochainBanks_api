@@ -409,8 +409,6 @@ def trans(submission_id):
 
     submission = Submission.query.get(submission_id)
     
-    # # List of models to fetch data from
-    # models = [Peoplemetrics, Planetmetrics, Prosperitymetrics, Governancemetrics]
 
     # List of models to fetch data from
     models = [SocialMetrics, EnvironmentalMetrics, GovernanceMetrics]  # Updated models
@@ -435,13 +433,13 @@ def trans(submission_id):
 
 
 
-    submission.Status = 1  # Pending (or another suitable value)
+    submission.Status = 2  # Pending (or another suitable value)
     db.session.commit()
 
     
     
     # Send data to BaaS platform 
-    baas_response = send_data_to_baas(data, submission_id, user_id) 
+    baas_response = send_data_to_baas(grouped_metrics, submission_id, user_id) 
     if not baas_response["success"]:
         return jsonify({
             "success": False,
@@ -455,6 +453,8 @@ def trans(submission_id):
     }), 200
     
 
+
+
 @app.route("/trans_mint/<submission_id>", methods=["POST"])
 @jwt_required()
 def trans(submission_id):
@@ -467,16 +467,23 @@ def trans(submission_id):
 
     user_id = get_jwt_identity() # Get the user's ID from the JWT token
 
-
-    submission.Status = 1  # Pending (or another suitable value)
-    db.session.commit()
-
     # Fetch metrics and create a combined dictionary
     baas_tx_id = submission.BaaS_Tx_ID
 
     metric_metadata = {
         "baas_tx_id": baas_tx_id  # Correct dictionary syntax with colon
     }
+
+    data = {}
+    grouped_metrics = {}
+    for model in models:
+        model_name = model.__name__
+        metric = model.query.filter_by(SubmissionID=submission_id).first()
+        if metric:
+            # Get the column names and values for the metric using introspection
+            columns = {column.name: getattr(metric, column.name) for column in inspect(model).columns}
+            data.update(columns)
+            grouped_metrics[model_name] = columns
 
 
     private_key = ecochainPK
@@ -540,7 +547,7 @@ def trans(submission_id):
     
     try:
         db.session.add(new_metric)
-        submission.Status = 2
+        submission.Status = 3
         db.session.commit()
         user_email = current_user.Email 
         user_name = current_user.Name 
@@ -549,7 +556,7 @@ def trans(submission_id):
         user_ERP = submission.EndPeriod
         user_Date = submission.Date
 
-        sendEmail(user_email, user_name, "EcoChain ESG Report", user_algoadd, AlgoTransaction, NFTAsset, models, user_SRP, user_ERP, user_Date)
+        sendEmail(user_email, user_name, "EcoChain ESG Report", user_algoadd, AlgoTransaction, NFTAsset, grouped_metrics, user_SRP, user_ERP, user_Date)
         return jsonify({
             "success": True,  
             "message": "Transaction recorded successfully"
