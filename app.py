@@ -455,9 +455,9 @@ def trans(submission_id):
 
 
 
-@app.route("/trans_mint/<submission_id>", methods=["POST"])
+@app.route("/mint/<submission_id>", methods=["POST"])
 @jwt_required()
-def trans(submission_id):
+def mint(submission_id):
     print("in server")
 
     submission = Submission.query.get(submission_id)
