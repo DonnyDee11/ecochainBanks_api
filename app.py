@@ -399,6 +399,7 @@ def input_governance_metrics(submission_id):
             "success": False,
             "message": str(e)
         }), 500
+    
 
 
 @app.route("/trans/<submission_id>", methods=["POST"])
@@ -432,8 +433,12 @@ def trans(submission_id):
 
     user_id = get_jwt_identity() # Get the user's ID from the JWT token
 
+
+
     submission.Status = 1  # Pending (or another suitable value)
     db.session.commit()
+
+    
     
     # Send data to BaaS platform 
     baas_response = send_data_to_baas(data, submission_id, user_id) 
@@ -443,33 +448,36 @@ def trans(submission_id):
             "message": "Failed to send data to BaaS platform"
             }), 500
     
-    # Create webhook to receive BaaS notification (Implementation details will depend on your setup)
-    create_transaction_complete_webhook(submission_id)
 
-    # return jsonify({
-    # "success": True,
-    # "message": "Data sent to BaaS platform. Waiting for blockchain confirmation."
-    # }), 200
+    return jsonify({
+    "success": True,
+    "message": "Data sent to BaaS platform. Waiting for blockchain confirmation."
+    }), 200
     
+
+@app.route("/trans_mint/<submission_id>", methods=["POST"])
+@jwt_required()
+def trans(submission_id):
+    print("in server")
+
+    submission = Submission.query.get(submission_id)
+    
+    # List of models to fetch data from
+    models = [SocialMetrics, EnvironmentalMetrics, GovernanceMetrics]  # Updated models
+
+    user_id = get_jwt_identity() # Get the user's ID from the JWT token
+
+
+    submission.Status = 1  # Pending (or another suitable value)
+    db.session.commit()
+
     # Fetch metrics and create a combined dictionary
+    baas_tx_id = submission.BaaS_Tx_ID
+
     metric_metadata = {
-        "status": "Success",
-        # Add any other relevant metadata here
+        "baas_tx_id": baas_tx_id  # Correct dictionary syntax with colon
     }
 
-    nftData = {}
-    grouped_metrics = {}
-    for model in models:
-        model_name = model.__name__
-        metric = model.query.filter_by(SubmissionID=submission_id).first()
-        if metric:
-            # Get the column names and values for the metric using introspection
-            columns = {column.name: getattr(metric, column.name) for column in inspect(model).columns}
-            nftData.update(columns)
-            grouped_metrics[model_name] = columns
-
-    # Remove the SubmissionID key as it's common and not needed in the output
-    nftData.pop('SubmissionID', None)
 
     private_key = ecochainPK
     my_address = ecochainAddress
@@ -516,6 +524,7 @@ def trans(submission_id):
     }), 500
 
 
+
     NFTTransactionTransfer = asa_receive_txid
     AlgoTransaction = txid
     NFTTransactionMint = txidNFT
@@ -540,7 +549,7 @@ def trans(submission_id):
         user_ERP = submission.EndPeriod
         user_Date = submission.Date
 
-        sendEmail(user_email, user_name, "EcoChain ESG Report", user_algoadd, AlgoTransaction, NFTAsset, grouped_metrics, user_SRP, user_ERP, user_Date)
+        sendEmail(user_email, user_name, "EcoChain ESG Report", user_algoadd, AlgoTransaction, NFTAsset, models, user_SRP, user_ERP, user_Date)
         return jsonify({
             "success": True,  
             "message": "Transaction recorded successfully"
@@ -581,15 +590,7 @@ def send_data_to_baas(data, submission_id, user_id):
         return {"success": False, "message": f"Error sending data to BaaS: {e}"}
 
 
-def create_transaction_complete_webhook(submission_id):
-    
-    """
-    For development with ngrok, we don't need to explicitly create a webhook. 
-    Just log the submission_id for tracking purposes.
-    """
 
-    print(f"Webhook created for submission ID: {submission_id}") 
-    # You might want to store this association in a database or in-memory data structure if needed
 
 
 
@@ -655,7 +656,11 @@ def transaction_complete_webhook():
     print(f"BaaS Transaction ID: {baas_tx_id}, BaaS Transaction URL: {baas_tx_url}")
 
     try:
-        # ... (update submission status, mint NFT, send email, etc.)
+        # Store BaaS transaction details in the Submission object
+        submission.BaaS_Tx_ID = baas_tx_id
+        submission.BaaS_Tx_URL = baas_tx_url
+
+        db.session.commit()  # Commit the changes to the database
 
         return jsonify({
             "success": True,

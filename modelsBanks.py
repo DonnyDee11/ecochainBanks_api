@@ -36,8 +36,10 @@ class Submission(db.Model):
     EndPeriod = db.Column(db.Date, nullable=True,default=datetime.utcnow)
     Year = db.Column(db.Integer)
     Score = db.Column(db.Double)
-    Status = db.Column(db.Integer) # 0: in progress, 1: Pending, 2: Approved, 3: Rejected, 4: Complete
+    Status = db.Column(db.Integer) # 0: in progress, 1: Pending, 2: Approved, 3: Complete, 4: Rejected
     UserID = db.Column(db.Integer, db.ForeignKey('user.UserID'))
+    BaaS_Tx_ID = db.Column(db.String(100), nullable=True)  # Store BaaS transaction ID
+    BaaS_Tx_URL = db.Column(db.String(255), nullable=True)  # Store BaaS transaction URL
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
