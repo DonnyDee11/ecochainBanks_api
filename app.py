@@ -147,7 +147,7 @@ def auditor_submissions():
 
 
         elif action.lower() == 'reject':
-            submission.Status = 3  # Or another value representing 'rejected'
+            submission.Status = 5  # Or another value representing 'rejected'
             # Send email notification to the bank
             send_email_to_bank(submission_id, 'rejected', feedback)
 
@@ -545,6 +545,58 @@ def detect_outliers(submission_data, bank_name, historical_data):
 
     return outliers
 
+@app.route("/detect_outliers/<submission_id>", methods=["POST"])
+@jwt_required()
+def detect_outliers_route(submission_id):
+    try:
+        # Fetch environmental metrics from the database
+        environmental_metrics_obj = EnvironmentalMetrics.query.filter_by(SubmissionID=submission_id).first()
+        if environmental_metrics_obj:
+            environmental_metrics = {
+                "Scope1": environmental_metrics_obj.Scope1,
+                "Scope2": environmental_metrics_obj.Scope2,
+                "Scope3": environmental_metrics_obj.Scope3,
+                "TotalNonRenewableEnergy": environmental_metrics_obj.TotalNonRenewableEnergy,
+                "TotalRenewableEnergy": environmental_metrics_obj.TotalRenewableEnergy,
+                "WasteToLandfill": environmental_metrics_obj.WasteToLandfill,
+                "RecycledWaste": environmental_metrics_obj.RecycledWaste,
+                "TotalWaterConsumption": environmental_metrics_obj.TotalWaterConsumption
+            }
+        else:
+            environmental_metrics = {}
+
+        # Load historical data
+        with open('historical_data.json', 'r') as f:
+            historical_data = json.load(f)
+
+        # Get bank name
+        bank_name = get_bank_name_from_submission(submission_id)
+
+        # Detect outliers
+        submission_data = {'EnvironmentalMetrics': environmental_metrics}
+        outliers = detect_outliers(submission_data, bank_name, historical_data)
+
+        # Get the submission object
+        submission = Submission.query.get(submission_id)
+
+        if outliers:
+            # Handle outliers
+            submission.Status = 1  # Flagged for review
+            submission.Outliers = ', '.join(outliers)  # Store outlier details in the database
+            db.session.commit()
+
+            send_email_to_auditor(submission_id, bank_name, outliers)  # Send email to auditor
+            return jsonify({"success": False, "message": "Outliers detected", "outliers": outliers}), 200  # Indicate outliers found
+        else:
+            submission.Status = 2  # No outliers, set status to "Pending"
+            db.session.commit()
+
+            return jsonify({"success": True, "message": "No outliers detected"}), 200
+
+    except Exception as e:
+        print(f"Error detecting outliers: {e}")
+        return jsonify({"success": False, "message": "Failed to detect outliers"}), 500
+    
 
 
 @app.route("/trans/<submission_id>", methods=["POST"])
@@ -553,29 +605,9 @@ def trans(submission_id):
     print("in server")
 
     submission = Submission.query.get(submission_id)
-    
 
     # List of models to fetch data from
     models = [SocialMetrics, EnvironmentalMetrics, GovernanceMetrics]  # Updated models
-
-    environmental_metrics_obj = EnvironmentalMetrics.query.filter_by(SubmissionID=submission_id).first()
-    
-    if environmental_metrics_obj:
-        environmental_metrics = {
-            "Scope1": environmental_metrics_obj.Scope1,
-            "Scope2": environmental_metrics_obj.Scope2,
-            "Scope3": environmental_metrics_obj.Scope3,
-            "TotalNonRenewableEnergy": environmental_metrics_obj.TotalNonRenewableEnergy,
-            "TotalRenewableEnergy": environmental_metrics_obj.TotalRenewableEnergy,
-            "WasteToLandfill": environmental_metrics_obj.WasteToLandfill,
-            "RecycledWaste": environmental_metrics_obj.RecycledWaste,
-            "TotalWaterConsumption": environmental_metrics_obj.TotalWaterConsumption
-        }
-    else:
-        environmental_metrics = {}  # Handle case where no metrics are found
-    
-    # Define submission_data 
-    submission_data = {'EnvironmentalMetrics': environmental_metrics}
 
     # Fetch metrics and create a combined dictionary
     data = {}
@@ -594,37 +626,8 @@ def trans(submission_id):
 
     user_id = get_jwt_identity() # Get the user's ID from the JWT token
 
-    # Load historical data from JSON file
-    with open('historical_data.json', 'r') as f:
-        historical_data = json.load(f)
-
-    # Get the bank name from the submission data (replace with your actual implementation)
-    bank_name = get_bank_name_from_submission(submission_id)  
-
-    # Detect outliers (pass only environmental_metrics)
-    print("submission_data:", submission_data)  
-    print("bank_name:", bank_name)  
-    outliers = detect_outliers(submission_data, bank_name, historical_data)
-    print("Detected outliers:", outliers) 
-
-    if outliers:
-        # Handle outliers (e.g., flag for auditor review)
-        submission.Status = 1  # Or another value representing 'flagged'
-        # Store outlier details
-        submission.Outliers = ', '.join(outliers)
-
-        # Notify the auditor (implement send_email_to_auditor)
-        # send_email_to_auditor(submission_id, bank_name, outliers)
-
-        return jsonify({
-            "success": False,
-            "message": "Submission flagged for review due to outliers. Please wait for auditor approval."
-        }), 400  # Or another appropriate status code
-    
-    else:
-        # Proceed with your existing logic to send data to BaaS
-        submission.Status = 2  # Pending (or another suitable value)
-
+    # Proceed with your existing logic to send data to BaaS
+    submission.Status = 3  # Pending (or another suitable value)
     db.session.commit()
     
     # Send data to BaaS platform 
@@ -765,7 +768,7 @@ def mint(submission_id):
     
     try:
         db.session.add(new_metric)
-        submission.Status = 3
+        submission.Status = 4
         db.session.commit()
         user_email = current_user.Email 
         user_name = current_user.Name 
