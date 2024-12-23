@@ -190,11 +190,12 @@ def auditor_submission_details(submission_id):
 
         # Format the data for the frontend
         submission_data = {
-            "submission": submission.as_dict(),
+            "submission": submission.as_dict(),  # Make sure submission.as_dict() returns the expected data
             "social_metrics": social_metrics.as_dict() if social_metrics else {},
             "environmental_metrics": environmental_metrics.as_dict() if environmental_metrics else {},
             "governance_metrics": governance_metrics.as_dict() if governance_metrics else {}
         }
+
 
         return jsonify(submission_data), 200
     except Exception as e:
@@ -1150,9 +1151,13 @@ def generate_dummy_data():
                     StartPeriod=fake.date_this_decade(),
                     EndPeriod=fake.date_this_decade(),
                     Score=random.uniform(0, 100), 
-                    Status=random.choice([0, 1, 2]), 
-                    UserID=user.UserID
-                )
+                    Status=random.choice([0, 1, 2, 3, 4, 5]), 
+                    UserID=user.UserID,
+                    BaaS_Tx_ID=fake.uuid4(),  
+                    Outliers="EnvironmentalMetrics: Scope1, EnvironmentalMetrics: Scope2",
+                    Feedback=fake.sentence(),  
+                    ReviewingAuditorID=random.choice(users).UserID 
+                    )
                 db.session.add(submission)
                 submissions.append(submission)
  
