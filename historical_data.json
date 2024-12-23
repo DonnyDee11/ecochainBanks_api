@@ -1,0 +1,390 @@
+{
+    "Nedbank": {
+      "2023": {
+        "Scope1": 14354,
+        "Scope2": 81115,
+        "Scope3": 34350,
+        "TotalNonRenewableEnergy": 83070,
+        "TotalRenewableEnergy": 5417,
+        "WasteToLandfill": 154,
+        "RecycledWaste": 427,
+        "TotalWaterConsumption": 159105
+      },
+      "2022": {
+        "Scope1": 7805,
+        "Scope2": 99881,
+        "Scope3": 24866,
+        "TotalNonRenewableEnergy": 101560,
+        "TotalRenewableEnergy": 1567,
+        "WasteToLandfill": 142,
+        "RecycledWaste": 338,
+        "TotalWaterConsumption": 144954
+      },
+      "2021": {
+        "Scope1": 3070,
+        "Scope2": 110527,
+        "Scope3": 20785,
+        "TotalNonRenewableEnergy": 113771,
+        "TotalRenewableEnergy": 681,
+        "WasteToLandfill": 95, 
+        "RecycledWaste": 313,
+        "TotalWaterConsumption": 156261
+      },
+      "2020": {
+        "Scope1": 2521,
+        "Scope2": 118047,
+        "Scope3": 18232,
+        "TotalNonRenewableEnergy": 115732,
+        "TotalRenewableEnergy": 668,
+        "WasteToLandfill": 116,  
+        "RecycledWaste": 329,
+        "TotalWaterConsumption": 191194
+      },
+      "2019": {
+        "Scope1": 2932,
+        "Scope2": 137103,
+        "Scope3": 49875,
+        "TotalNonRenewableEnergy": 138488,
+        "TotalRenewableEnergy": 687,
+        "WasteToLandfill": 183, 
+        "RecycledWaste": 616,
+        "TotalWaterConsumption": 254801
+      },
+      "2018": {
+        "Scope1": 2045,
+        "Scope2": 142254,
+        "Scope3": 53716,
+        "TotalNonRenewableEnergy": 143691,
+        "TotalRenewableEnergy": null,
+        "WasteToLandfill": 195, 
+        "RecycledWaste": 723,
+        "TotalWaterConsumption": 284053
+      },
+      "2017": {
+        "Scope1": 1924,
+        "Scope2": 148517,
+        "Scope3": 56090,
+        "TotalNonRenewableEnergy": 150017,
+        "TotalRenewableEnergy": null,
+        "WasteToLandfill": 220, 
+        "RecycledWaste": 689,
+        "TotalWaterConsumption": 317580
+      },
+      "Mean": {
+        "Scope1": 4950,
+        "Scope2": 119563,
+        "Scope3": 36845,
+        "TotalNonRenewableEnergy": 120904,
+        "TotalRenewableEnergy": 1804,
+        "WasteToLandfill": 158, 
+        "RecycledWaste": 491,
+        "TotalWaterConsumption": 215421
+      },
+      "Standard Deviation": {
+        "Scope1": 4613,
+        "Scope2": 24598,
+        "Scope3": 16222,
+        "TotalNonRenewableEnergy": 24356,
+        "TotalRenewableEnergy": 2056,
+        "WasteToLandfill": 44, 
+        "RecycledWaste": 180,
+        "TotalWaterConsumption": 69428
+      },
+      "Minimum Threshold": {
+        "Scope1": 4276,
+        "Scope2": 70367,
+        "Scope3": 4401,
+        "TotalNonRenewableEnergy": 72192,
+        "TotalRenewableEnergy": 2308,
+        "WasteToLandfill": 69, 
+        "RecycledWaste": 131,
+        "TotalWaterConsumption": 76565
+      },
+      "Maximum Threshold": {
+        "Scope1": 14177,
+        "Scope2": 168759,
+        "Scope3": 69288,
+        "TotalNonRenewableEnergy": 169616,
+        "TotalRenewableEnergy": 5916,
+        "WasteToLandfill": 247,  
+        "RecycledWaste": 850,
+        "TotalWaterConsumption": 354277
+      }
+    },
+"Absa": {
+    "2023": {
+      "Scope1": 21858,
+      "Scope2": 112516,
+      "Scope3": 17375,
+      "TotalNonRenewableEnergy": 3960,
+      "TotalRenewableEnergy": 218610,
+      "WasteToLandfill": 104,
+      "RecycledWaste": 468,
+      "TotalWaterConsumption": 265172
+    },
+    "2022": {
+      "Scope1": 15885,
+      "Scope2": 138157,
+      "Scope3": 23447,
+      "TotalNonRenewableEnergy": 1834,
+      "TotalRenewableEnergy": 214129,
+      "WasteToLandfill": 193,
+      "RecycledWaste": 424,
+      "TotalWaterConsumption": 194622
+    },
+    "2021": {
+      "Scope1": 12276,
+      "Scope2": 159708,
+      "Scope3": 16205,
+      "TotalNonRenewableEnergy": 1687,
+      "TotalRenewableEnergy": 223972,
+      "WasteToLandfill": 250,
+      "RecycledWaste": 455,
+      "TotalWaterConsumption": 190103
+    },
+    "2020": {
+      "Scope1": 12258,
+      "Scope2": 160682,
+      "Scope3": 17481,
+      "TotalNonRenewableEnergy": 1857,
+      "TotalRenewableEnergy": 222736,
+      "WasteToLandfill": 478,
+      "RecycledWaste": 811,
+      "TotalWaterConsumption": 160848
+    },
+    "2019": {
+      "Scope1": 20835,
+      "Scope2": 105747,
+      "Scope3": 27775,
+      "TotalNonRenewableEnergy": 1959,
+      "TotalRenewableEnergy": 277879,
+      "WasteToLandfill": 1337,
+      "RecycledWaste": 1470,
+      "TotalWaterConsumption": null
+    },
+    "2018": {
+      "Scope1": 22003,
+      "Scope2": 169581,
+      "Scope3": 34329,
+      "TotalNonRenewableEnergy": 1996,
+      "TotalRenewableEnergy": 321138,
+      "WasteToLandfill": 1245,
+      "RecycledWaste": 1649,
+      "TotalWaterConsumption": null
+    },
+    "Mean": {
+      "Scope1": 17519,
+      "Scope2": 141065,
+      "Scope3": 22769,
+      "TotalNonRenewableEnergy": 2215,
+      "TotalRenewableEnergy": 246411,
+      "WasteToLandfill": 618,
+      "RecycledWaste": 880,
+      "TotalWaterConsumption": 202686
+    },
+    "Standard Deviation": {
+      "Scope1": 4643,
+      "Scope2": 26894,
+      "Scope3": 7201,
+      "TotalNonRenewableEnergy": 861,
+      "TotalRenewableEnergy": 43482,
+      "WasteToLandfill": 532,
+      "RecycledWaste": 548,
+      "TotalWaterConsumption": 44265
+    },
+    "Minimum Threshold": {
+      "Scope1": 8234,
+      "Scope2": 87277,
+      "Scope3": 8366,
+      "TotalNonRenewableEnergy": 433,
+      "TotalRenewableEnergy": 159447,
+      "WasteToLandfill": 447,
+      "RecycledWaste": 217,
+      "TotalWaterConsumption": 114155
+    },
+    "Maximum Threshold": {
+      "Scope1": 26805,
+      "Scope2": 194853,
+      "Scope3": 37171,
+      "TotalNonRenewableEnergy": 3938,
+      "TotalRenewableEnergy": 333374,
+      "WasteToLandfill": 1683,
+      "RecycledWaste": 1976,
+      "TotalWaterConsumption": 291217
+    }
+  },
+    "Standard Bank": {
+    "2023": {
+      "Scope1": 18560,
+      "Scope2": 119093,
+      "Scope3": 15999,
+      "TotalNonRenewableEnergy": 178882,
+      "TotalRenewableEnergy": 2595,
+      "WasteToLandfill": 517,
+      "RecycledWaste": 96,
+      "TotalWaterConsumption": null
+    },
+    "2022": {
+      "Scope1": 12083,
+      "Scope2": 137644,
+      "Scope3": 12358,
+      "TotalNonRenewableEnergy": 166379,
+      "TotalRenewableEnergy": 2459,
+      "WasteToLandfill": 317,
+      "RecycledWaste": 38,
+      "TotalWaterConsumption": null
+    },
+    "2021": {
+      "Scope1": 8377,
+      "Scope2": 154513,
+      "Scope3": 1540,
+      "TotalNonRenewableEnergy": 161633,
+      "TotalRenewableEnergy": 2600,
+      "WasteToLandfill": 263,
+      "RecycledWaste": 21,
+      "TotalWaterConsumption": null
+    },
+    "2020": {
+      "Scope1": 8463,
+      "Scope2": 172648,
+      "Scope3": 5104,
+      "TotalNonRenewableEnergy": 189341,
+      "TotalRenewableEnergy": 2686,
+      "WasteToLandfill": null,
+      "RecycledWaste": 51,
+      "TotalWaterConsumption": null
+    },
+    "2019": {
+      "Scope1": 9224,
+      "Scope2": 197771,
+      "Scope3": 22897,
+      "TotalNonRenewableEnergy": null,
+      "TotalRenewableEnergy": 567,
+      "WasteToLandfill": 727,
+      "RecycledWaste": 227,
+      "TotalWaterConsumption": null
+    },
+    "2018": {
+      "Scope1": 9941,
+      "Scope2": 202586,
+      "Scope3": 30684,
+      "TotalNonRenewableEnergy": null,
+      "TotalRenewableEnergy": 1333,
+      "WasteToLandfill": 495,
+      "RecycledWaste": 170,
+      "TotalWaterConsumption": null
+    },
+    "Mean": {
+      "Scope1": 11108,
+      "Scope2": 164043,
+      "Scope3": 14764,
+      "TotalNonRenewableEnergy": 174059,
+      "TotalRenewableEnergy": 2585,
+      "WasteToLandfill": 527,
+      "RecycledWaste": 100,
+      "TotalWaterConsumption": null
+    },
+    "Standard Deviation": {
+      "Scope1": 3895,
+      "Scope2": 33183,
+      "Scope3": 10910,
+      "TotalNonRenewableEnergy": 12519,
+      "TotalRenewableEnergy": 941,
+      "WasteToLandfill": 265,
+      "RecycledWaste": 82,
+      "TotalWaterConsumption": null
+    },
+    "Minimum Threshold": {
+      "Scope1": 3318,
+      "Scope2": 97677,
+      "Scope3": 7056,
+      "TotalNonRenewableEnergy": 149020,
+      "TotalRenewableEnergy": 2397,
+      "WasteToLandfill": 265,
+      "RecycledWaste": 64,
+      "TotalWaterConsumption": null
+    },
+    "Maximum Threshold": {
+      "Scope1": 18898,
+      "Scope2": 230408,
+      "Scope3": 36583,
+      "TotalNonRenewableEnergy": 199097,
+      "TotalRenewableEnergy": 2773,
+      "WasteToLandfill": 1029,
+      "RecycledWaste": 264,
+      "TotalWaterConsumption": null
+    }
+  },
+    "Firstrand": {
+    "2023": {
+      "Scope1": 16458,
+      "Scope2": 137895,
+      "Scope3": 18915,
+      "TotalNonRenewableEnergy": null,
+      "TotalRenewableEnergy": null,
+      "WasteToLandfill": null,
+      "RecycledWaste": null,
+      "TotalWaterConsumption": null
+    },
+    "2022": {
+      "Scope1": 7303,
+      "Scope2": 145253,
+      "Scope3": 10853,
+      "TotalNonRenewableEnergy": null,
+      "TotalRenewableEnergy": null,
+      "WasteToLandfill": null,
+      "RecycledWaste": null,
+      "TotalWaterConsumption": null
+    },
+    "2021": {
+      "Scope1": 6508,
+      "Scope2": 153268,
+      "Scope3": 7189,
+      "TotalNonRenewableEnergy": null,
+      "TotalRenewableEnergy": null,
+      "WasteToLandfill": null,
+      "RecycledWaste": null,
+      "TotalWaterConsumption": null
+    },
+    "Mean": {
+      "Scope1": 10090,
+      "Scope2": 145472,
+      "Scope3": 12319,
+      "TotalNonRenewableEnergy": null,
+      "TotalRenewableEnergy": null,
+      "WasteToLandfill": null,
+      "RecycledWaste": null,
+      "TotalWaterConsumption": null
+    },
+    "Standard Deviation": {
+      "Scope1": 5529,
+      "Scope2": 7689,
+      "Scope3": 5999,
+      "TotalNonRenewableEnergy": null,
+      "TotalRenewableEnergy": null,
+      "WasteToLandfill": null,
+      "RecycledWaste": null,
+      "TotalWaterConsumption": null
+    },
+    "Minimum Threshold": {
+      "Scope1": 969,
+      "Scope2": 130094,
+      "Scope3": 321,
+      "TotalNonRenewableEnergy": null,
+      "TotalRenewableEnergy": null,
+      "WasteToLandfill": null,
+      "RecycledWaste": null,
+      "TotalWaterConsumption": null
+    },
+    "Maximum Threshold": {
+      "Scope1": 21149,
+      "Scope2": 160850,
+      "Scope3": 24317,
+      "TotalNonRenewableEnergy": null,
+      "TotalRenewableEnergy": null,
+      "WasteToLandfill": null,
+      "RecycledWaste": null,
+      "TotalWaterConsumption": null
+    }
+  }
+}
