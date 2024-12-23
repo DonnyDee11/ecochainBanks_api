@@ -25,6 +25,8 @@ from datetime import datetime
 import requests
 from modelsBanks import db, User, UserRole, Transaction, Submission, SocialMetrics, EnvironmentalMetrics, GovernanceMetrics
 from werkzeug.security import generate_password_hash
+import json
+import numpy as np
 
 ecochainPK = "4pGX12svaEoBYqBX7WfriGIhUB3VjkeUofm6IM3Y+6b69JOah+47V6+PX/KeLfpDMv683zGwQ2R83pkdj7FwCA=="
 ecochainAddress = "7L2JHGUH5Y5VPL4PL7ZJ4LP2IMZP5PG7GGYEGZD432MR3D5ROAEDKWFGRU"
@@ -123,25 +125,101 @@ def auditor_submissions():
     elif request.method == 'POST':
         data = request.get_json()
         submission_id = data.get('submission_id')
-        new_status = data.get('status')  # 'approved' or 'rejected'
+        action = data.get('action')  # 'view' or 'approve' or 'reject'
+        feedback = data.get('feedback')
 
-        if not submission_id or not new_status:
-            return jsonify({"msg": "Missing submission_id or status"}), 400
+        if not submission_id or not action:
+            return jsonify({"msg": "Missing submission_id or action"}), 400
 
         submission = Submission.query.get(submission_id)
         if not submission:
             return jsonify({"msg": "Submission not found"}), 404
 
-        # Update submission status (you might want to add more validation or checks here)
-        if new_status.lower() == 'approved':
+        
+        if action.lower() == 'view':
+            # Redirect to the submission details page for the auditor
+            return redirect(url_for('auditor_submission_details', submission_id=submission_id))
+        
+        elif action.lower() == 'approve':
             submission.Status = 2  # Or another value representing 'approved'
-        elif new_status.lower() == 'rejected':
-            submission.Status = 3  # Or another value representing 'rejected'
-        else:
-            return jsonify({"msg": "Invalid status value"}), 400
+            # Send email notification to the bank (implement send_email_to_bank)
+            send_email_to_bank(submission_id, 'approved', feedback)
 
+
+        elif action.lower() == 'reject':
+            submission.Status = 3  # Or another value representing 'rejected'
+            # Send email notification to the bank
+            send_email_to_bank(submission_id, 'rejected', feedback)
+
+        else:
+            return jsonify({"msg": "Invalid action value"}), 400
+        
+        if action.lower() in ('approve', 'reject'):
+            # Reset the ReviewingAuditorID to null after approval or rejection
+            submission.ReviewingAuditorID = None 
+
+        # Store the feedback (this is the main change)
+        submission.Feedback = feedback  
         db.session.commit()
+
         return jsonify({"msg": "Submission status updated successfully"}), 200
+    
+
+# New route to display submission details to the auditor
+@app.route("/auditor/submissions/<int:submission_id>", methods=["GET"])
+@jwt_required()
+def auditor_submission_details(submission_id):
+    current_user_id = get_jwt_identity()
+    try:
+        submission = Submission.query.get(submission_id)
+        if not submission:
+            return jsonify({"msg": "Submission not found"}), 404
+        
+        # Check if the submission is already being reviewed by another auditor
+        if submission.ReviewingAuditorID is not None and submission.ReviewingAuditorID != current_user_id:
+            return jsonify({"msg": "Submission is currently being reviewed by another auditor."}), 400
+    
+        # Set the ReviewingAuditorID to the current auditor's ID
+        submission.ReviewingAuditorID = current_user_id
+        db.session.commit()
+
+        # Fetch associated metrics
+        social_metrics = SocialMetrics.query.filter_by(SubmissionID=submission_id).first()
+        environmental_metrics = EnvironmentalMetrics.query.filter_by(SubmissionID=submission_id).first()
+        governance_metrics = GovernanceMetrics.query.filter_by(SubmissionID=submission_id).first()
+
+        # Format the data for the frontend
+        submission_data = {
+            "submission": submission.as_dict(),
+            "social_metrics": social_metrics.as_dict() if social_metrics else {},
+            "environmental_metrics": environmental_metrics.as_dict() if environmental_metrics else {},
+            "governance_metrics": governance_metrics.as_dict() if governance_metrics else {}
+        }
+
+        return jsonify(submission_data), 200
+    except Exception as e:
+        print(f"Error fetching submission details: {e}")
+        return jsonify({"msg": "Failed to fetch submission details"}), 500  
+    
+
+@app.route("/auditor/submissions/<int:submission_id>/feedback", methods=["POST"])
+@jwt_required()
+def submit_auditor_feedback(submission_id):
+    try:
+        submission = Submission.query.get(submission_id)
+        if not submission:
+            return jsonify({"msg": "Submission not found"}), 404
+
+        feedback = request.json.get('feedback')
+        
+        # Store the feedback (you might need to add a Feedback column to your Submission model)
+        submission.Feedback = feedback  
+        db.session.commit()
+
+        return jsonify({"msg": "Feedback submitted successfully"}), 200
+    except Exception as e:
+        print(f"Error submitting feedback: {e}")
+        return jsonify({"msg": "Failed to submit feedback"}), 500
 
 
 @app.route("/register", methods=["POST"])
@@ -401,6 +479,73 @@ def input_governance_metrics(submission_id):
         }), 500
     
 
+def get_bank_name_from_submission(submission_id):
+  """
+  Retrieves the bank name associated with a submission.
+
+  Args:
+      submission_id (int): The ID of the submission.
+
+  Returns:
+      str: The name of the bank.
+  """
+  try:
+    # Get the submission
+    submission = Submission.query.get(submission_id)
+    if submission is None:
+      return None  # Or handle the case where the submission is not found
+
+    # Get the user associated with the submission
+    user = User.query.get(submission.UserID)
+    if user is None:
+      return None  # Or handle the case where the user is not found
+
+    # Return the user's name as the bank name
+    return user.Name
+
+  except Exception as e:
+    # Handle any potential errors (e.g., database errors)
+    print(f"Error retrieving bank name: {e}")
+    return None  # Or handle the error appropriately
+
+
+def detect_outliers(submission_data, bank_name, historical_data):
+ 
+    outliers = []
+
+    # Access the "Mean" and "Standard Deviation" dictionaries once
+    mean_data = historical_data[bank_name].get("Mean", {})
+    std_dev_data = historical_data[bank_name].get("Standard Deviation", {})
+
+    for metric_type, metrics in submission_data.items():
+        if metric_type == 'EnvironmentalMetrics' and metrics:
+            for metric in ["Scope1", "Scope2", "Scope3", "TotalNonRenewableEnergy", "TotalRenewableEnergy", "WasteToLandfill", "RecycledWaste", "TotalWaterConsumption"]:  # List of metrics to check
+                try:
+                    # Get the value from the metrics dictionary
+                    numeric_value = float(metrics[metric])  # Corrected line
+
+                    # Access the mean and standard deviation for the current metric
+                    mean = mean_data.get(metric)  
+                    std = std_dev_data.get(metric)
+
+                    if mean is not None and std is not None:
+                        difference = abs(numeric_value - mean)
+                        threshold = 2 * std
+                        print(f"  Difference: {difference}, Threshold: {threshold}")  # Print difference and threshold
+                        
+                        if difference >= threshold:
+                            outliers.append(f"{metric_type}: {metric}")
+                            print(f"  Outlier detected!")
+                            
+                
+                except ValueError:
+                    print(f"Non-numeric value encountered for {metric_type}: {metric}")
+                except AttributeError:
+                    print(f"Metric {metric} not found in {metric_type}")
+
+    return outliers
+
+
 
 @app.route("/trans/<submission_id>", methods=["POST"])
 @jwt_required()
@@ -413,6 +558,24 @@ def trans(submission_id):
     # List of models to fetch data from
     models = [SocialMetrics, EnvironmentalMetrics, GovernanceMetrics]  # Updated models
 
+    environmental_metrics_obj = EnvironmentalMetrics.query.filter_by(SubmissionID=submission_id).first()
+    
+    if environmental_metrics_obj:
+        environmental_metrics = {
+            "Scope1": environmental_metrics_obj.Scope1,
+            "Scope2": environmental_metrics_obj.Scope2,
+            "Scope3": environmental_metrics_obj.Scope3,
+            "TotalNonRenewableEnergy": environmental_metrics_obj.TotalNonRenewableEnergy,
+            "TotalRenewableEnergy": environmental_metrics_obj.TotalRenewableEnergy,
+            "WasteToLandfill": environmental_metrics_obj.WasteToLandfill,
+            "RecycledWaste": environmental_metrics_obj.RecycledWaste,
+            "TotalWaterConsumption": environmental_metrics_obj.TotalWaterConsumption
+        }
+    else:
+        environmental_metrics = {}  # Handle case where no metrics are found
+    
+    # Define submission_data 
+    submission_data = {'EnvironmentalMetrics': environmental_metrics}
 
     # Fetch metrics and create a combined dictionary
     data = {}
@@ -431,12 +594,38 @@ def trans(submission_id):
 
     user_id = get_jwt_identity() # Get the user's ID from the JWT token
 
+    # Load historical data from JSON file
+    with open('historical_data.json', 'r') as f:
+        historical_data = json.load(f)
 
+    # Get the bank name from the submission data (replace with your actual implementation)
+    bank_name = get_bank_name_from_submission(submission_id)  
 
-    submission.Status = 2  # Pending (or another suitable value)
-    db.session.commit()
+    # Detect outliers (pass only environmental_metrics)
+    print("submission_data:", submission_data)  
+    print("bank_name:", bank_name)  
+    outliers = detect_outliers(submission_data, bank_name, historical_data)
+    print("Detected outliers:", outliers) 
 
+    if outliers:
+        # Handle outliers (e.g., flag for auditor review)
+        submission.Status = 1  # Or another value representing 'flagged'
+        # Store outlier details
+        submission.Outliers = ', '.join(outliers)
+
+        # Notify the auditor (implement send_email_to_auditor)
+        # send_email_to_auditor(submission_id, bank_name, outliers)
+
+        return jsonify({
+            "success": False,
+            "message": "Submission flagged for review due to outliers. Please wait for auditor approval."
+        }), 400  # Or another appropriate status code
     
+    else:
+        # Proceed with your existing logic to send data to BaaS
+        submission.Status = 2  # Pending (or another suitable value)
+
+    db.session.commit()
     
     # Send data to BaaS platform 
     baas_response = send_data_to_baas(grouped_metrics, submission_id, user_id) 
@@ -445,13 +634,42 @@ def trans(submission_id):
             "success": False,
             "message": "Failed to send data to BaaS platform"
             }), 500
-    
-
+        
     return jsonify({
     "success": True,
     "message": "Data sent to BaaS platform. Waiting for blockchain confirmation."
     }), 200
     
+
+def send_email_to_auditor(submission_id, bank_name, outliers):
+    """
+    Sends an email notification to all auditors about detected outliers.
+
+    Args:
+        submission_id (int): The ID of the submission.
+        bank_name (str): The name of the bank.
+        outliers (list): The list of outlier metrics.
+    """
+    try:
+        # Fetch email addresses of all auditors
+        auditors = User.query.filter_by(Role=UserRole.auditor).all()
+        if not auditors:
+            print("No auditors found in the database.")
+            return
+
+        auditor_emails = [auditor.Email for auditor in auditors]
+
+        # Construct the email message
+        subject = f"EcoChain: Outliers detected for {bank_name} submission (ID: {submission_id})"
+        body = f"Outliers detected in the following metrics:\n\n{', '.join(outliers)}\n\nPlease review the submission on the auditor dashboard."
+
+        # Send the email to all auditors
+        msg = Message(subject, sender=('Ecochain', 'ecochain0@gmail.com'), recipients=auditor_emails)
+        msg.body = body
+        mail.send(msg)
+
+    except Exception as e:
+        print(f"Error sending email to auditors: {e}")
 
 
 
@@ -685,7 +903,6 @@ def transaction_complete_webhook():
             "message": "An error occurred while processing the webhook"
         }), 500
 
-
 def resolve_submission_id_from_baas_data(data):
     return data.get("dataId")
 
@@ -776,6 +993,42 @@ def sendEmailBaaS(recipient_email, recipient_name, subject, algoaddress, nft_id,
     msg.body = body
     mail.send(msg)
 
+def send_email_to_bank(submission_id, decision, feedback=None):
+    """
+    Sends an email notification to the bank about the auditor's decision.
+
+    Args:
+        submission_id (int): The ID of the submission.
+        decision (str): The auditor's decision ('approved' or 'rejected').
+        feedback (str, optional): The auditor's feedback. Defaults to None.
+    """
+    try:
+        # Fetch the bank's email address from the submission
+        submission = Submission.query.get(submission_id)
+        if not submission:
+            print("Submission not found.")
+            return
+
+        user = User.query.get(submission.UserID)
+        if not user:
+            print("User not found for this submission.")
+            return
+
+        bank_email = user.Email
+
+        # Construct the email message
+        subject = f"EcoChain: Your submission (ID: {submission_id}) has been {decision}"
+        body = f"Your submission (ID: {submission_id}) has been {decision} by the auditor."
+        if feedback:
+            body += f"\n\nAuditor's feedback:\n{feedback}"
+
+        # Send the email (using your existing email sending mechanism)
+        msg = Message(subject, sender=('Ecochain', 'ecochain0@gmail.com'), recipients=[bank_email])
+        msg.body = body
+        mail.send(msg)
+
+    except Exception as e:
+        print(f"Error sending email to bank: {e}")
 
    
 @app.route('/get_reports')
@@ -1136,6 +1389,9 @@ def generate_dummy_data():
                 EmployeeCommutingEmissions=fake.pyfloat(min_value=0, max_value=200000),
                 ElectricityTransmissionLossesEmissions=fake.pyfloat(min_value=0, max_value=100000),
                 CarbonEmissionsPerMeterSquared=fake.pyfloat(min_value=0, max_value=100),
+                Scope1=fake.pyfloat(min_value=0, max_value=100000),
+                Scope2=fake.pyfloat(min_value=0, max_value=100000),
+                Scope3=fake.pyfloat(min_value=0, max_value=100000),
 
                 # Waste Management
                 TotalWaste=fake.pyfloat(min_value=0, max_value=100000),  # Example: in kg

@@ -40,6 +40,9 @@ class Submission(db.Model):
     UserID = db.Column(db.Integer, db.ForeignKey('user.UserID'))
     BaaS_Tx_ID = db.Column(db.String(100), nullable=True)  # Store BaaS transaction ID
     BaaS_Tx_URL = db.Column(db.String(255), nullable=True)  # Store BaaS transaction URL
+    Outliers = db.Column(db.String(255), nullable=True)
+    Feedback = db.Column(db.String(1000), nullable=True)
+    ReviewingAuditorID = db.Column(db.Integer, nullable=True)
 
     def as_dict(self):
        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -299,11 +302,16 @@ class EnvironmentalMetrics(db.Model):
     EmployeeCommutingEmissions = db.Column(db.Float, nullable=True) 
     ElectricityTransmissionLossesEmissions = db.Column(db.Float, nullable=True) 
     CarbonEmissionsPerMeterSquared = db.Column(db.Float, nullable=True)
+    Scope1 = db.Column(db.Float, nullable=True)  
+    Scope2 = db.Column(db.Float, nullable=True)  
+    Scope3 = db.Column(db.Float, nullable=True)
 
     # Waste Management
     TotalWaste = db.Column(db.Float, nullable=True) 
     RecycledWaste = db.Column(db.Float, nullable=True)  
     WasteToLandfill = db.Column(db.Float, nullable=True)
+    TotalWaterConsumption = db.Column(db.Float, nullable=True)
+
 
 
 class GovernanceMetrics(db.Model):
