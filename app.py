@@ -60,6 +60,13 @@ def home():
         "message": "Welcome to EcoChain"
         }), 200
 
+@app.route('/get_role', methods=['GET'])
+@jwt_required()
+def get_role():
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+    return jsonify({'role': user.Role.value}), 200
+
 @app.route("/login", methods=["POST"])
 def login():
     if request.method == "POST":
@@ -102,7 +109,14 @@ def admin_submissions():
     submissions = Submission.query.all()
 
     # Convert submissions to a list of dictionaries
-    submission_list = [submission.as_dict() for submission in submissions]
+    # submission_list = [submission.as_dict() for submission in submissions]
+
+    submission_list = []
+    for submission in submissions:
+        submission_data = submission.as_dict()
+        user = User.query.get(submission.UserID)  # Fetch the associated User object
+        submission_data['UserName'] = user.Name  # Add the user's name to the submission data
+        submission_list.append(submission_data)
 
     return jsonify(submission_list), 200
 
@@ -118,9 +132,29 @@ def auditor_submissions():
 
     if request.method == 'GET':
         # Fetch pending submissions (assuming Status=1 means pending)
-        submissions = Submission.query.filter_by(Status=1).all()  
-        submission_list = [submission.as_dict() for submission in submissions]
-        return jsonify(submission_list), 200
+        user_id = get_jwt_identity()
+        current_user = db.session.get(User, user_id)
+        subs = Submission.query.filter_by(Status=1).all()
+        
+        serialized_subs = []
+        for sub in subs:
+            sub_dict = sub.as_dict()
+            user = User.query.get(sub.UserID)  # Fetch the associated User object
+            sub_dict['UserName'] = user.Name  # Add the user's name to the submission data
+            serialized_subs.append(sub_dict)
+
+        return jsonify({
+            "success": True,
+            "id": current_user.UserID,
+            "email" : current_user.Email,
+            "name": current_user.Name,
+            "algo_add" : current_user.AlgorandAddress,
+            "location": current_user.Location,
+            "industry" : current_user.Industry,
+            "size": current_user.Size,
+            "description" : current_user.Description,
+            "submissions": serialized_subs
+        }), 200
 
     elif request.method == 'POST':
         data = request.get_json()
@@ -535,7 +569,7 @@ def detect_outliers(submission_data, bank_name, historical_data):
                         print(f"  Difference: {difference}, Threshold: {threshold}")  # Print difference and threshold
                         
                         if difference >= threshold:
-                            outliers.append(f"{metric_type}: {metric}")
+                            outliers.append(f"{metric}: {numeric_value}")  # Include the metric and its value
                             print(f"  Outlier detected!")
                             
                 
