@@ -158,34 +158,45 @@ def auditor_submissions():
 
     elif request.method == 'POST':
         data = request.get_json()
+        print("Request data:", request.get_json())
         submission_id = data.get('submission_id')
         action = data.get('action')  # 'view' or 'approve' or 'reject'
-        feedback = data.get('feedback')
+        # feedback = data.get('feedback')
+
+        print("Submission ID:", submission_id)  # Print the submission ID
+        print("Action:", action)  # Print the action
+
 
         if not submission_id or not action:
+            print("Missing submission_id or action")  # Print if this condition is met
             return jsonify({"msg": "Missing submission_id or action"}), 400
 
         submission = Submission.query.get(submission_id)
         if not submission:
+            print("Submission not found")  # Print if this condition is met
             return jsonify({"msg": "Submission not found"}), 404
 
         
         if action.lower() == 'view':
             # Redirect to the submission details page for the auditor
+            print("Redirecting to submission details page")  # Print before redirecting
             return redirect(url_for('auditor_submission_details', submission_id=submission_id))
         
-        elif action.lower() == 'approve':
+        elif action.lower() == 'approved':
+            print("Approving submission")  # Print before approving
             submission.Status = 2  # Or another value representing 'approved'
             # Send email notification to the bank (implement send_email_to_bank)
-            send_email_to_bank(submission_id, 'approved', feedback)
+            send_email_to_bank(submission_id, 'approved')
 
 
-        elif action.lower() == 'reject':
+        elif action.lower() == 'rejected':
+            print("Rejecting submission")  # Print before rejecting
             submission.Status = 5  # Or another value representing 'rejected'
             # Send email notification to the bank
-            send_email_to_bank(submission_id, 'rejected', feedback)
+            send_email_to_bank(submission_id, 'rejected')
 
         else:
+            print("Invalid action value")  # Print if this condition is met
             return jsonify({"msg": "Invalid action value"}), 400
         
         if action.lower() in ('approve', 'reject'):
@@ -193,14 +204,14 @@ def auditor_submissions():
             submission.ReviewingAuditorID = None 
 
         # Store the feedback (this is the main change)
-        submission.Feedback = feedback  
+        # submission.Feedback = feedback  
         db.session.commit()
 
         return jsonify({"msg": "Submission status updated successfully"}), 200
     
 
 # New route to display submission details to the auditor
-@app.route("/auditor/submissions/<int:submission_id>", methods=["GET"])
+@app.route("/auditor_review/<submission_id>", methods=["GET"])
 @jwt_required()
 def auditor_submission_details(submission_id):
     current_user_id = get_jwt_identity()
@@ -217,17 +228,16 @@ def auditor_submission_details(submission_id):
         submission.ReviewingAuditorID = current_user_id
         db.session.commit()
 
-        # Fetch associated metrics
-        social_metrics = SocialMetrics.query.filter_by(SubmissionID=submission_id).first()
-        environmental_metrics = EnvironmentalMetrics.query.filter_by(SubmissionID=submission_id).first()
-        governance_metrics = GovernanceMetrics.query.filter_by(SubmissionID=submission_id).first()
+        # Fetch the associated User object
+        user = User.query.get(submission.UserID)
 
-        # Format the data for the frontend
+        # Format the data for the frontend (only include outliers)
         submission_data = {
-            "submission": submission.as_dict(),  # Make sure submission.as_dict() returns the expected data
-            "social_metrics": social_metrics.as_dict() if social_metrics else {},
-            "environmental_metrics": environmental_metrics.as_dict() if environmental_metrics else {},
-            "governance_metrics": governance_metrics.as_dict() if governance_metrics else {}
+            "submission": {
+                "SubmissionID": submission.SubmissionID,
+                "Name": user.Name,
+                "Outliers": submission.Outliers
+            }
         }
 
 
@@ -565,11 +575,13 @@ def detect_outliers(submission_data, bank_name, historical_data):
 
                     if mean is not None and std is not None:
                         difference = abs(numeric_value - mean)
+                        lower_threshold = mean - 2 * std
+                        upper_threshold = mean + 2 * std
                         threshold = 2 * std
                         print(f"  Difference: {difference}, Threshold: {threshold}")  # Print difference and threshold
                         
                         if difference >= threshold:
-                            outliers.append(f"{metric}: {numeric_value}")  # Include the metric and its value
+                            outliers.append(f"{metric}: {numeric_value} (Difference: {difference:.2f}, Thresholds: {lower_threshold:.2f} - {upper_threshold:.2f})")
                             print(f"  Outlier detected!")
                             
                 
